@@ -1,0 +1,286 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<document type="com.apple.InterfaceBuilder3.CocoaTouch.Storyboard.XIB" version="3.0" toolsVersion="16096" targetRuntime="iOS.CocoaTouch" propertyAccessControl="none" useAutolayout="YES" useTraitCollections="YES" useSafeAreas="YES" colorMatched="YES" initialViewController="bnC-Ap-4BZ">
+    <device id="retina6_1" orientation="portrait" appearance="light"/>
+    <dependencies>
+        <deployment identifier="iOS"/>
+        <plugIn identifier="com.apple.InterfaceBuilder.IBCocoaTouchPlugin" version="16087"/>
+        <capability name="Safe area layout guides" minToolsVersion="9.0"/>
+        <capability name="documents saved in the Xcode 8 format" minToolsVersion="8.0"/>
+    </dependencies>
+    <scenes>
+        <!--View Controller-->
+        <scene sceneID="tne-QT-ifu">
+            <objects>
+                <viewController id="BYZ-38-t0r" customClass="ViewController" customModule="Audio_Drive" customModuleProvider="target" sceneMemberID="viewController">
+                    <view key="view" contentMode="scaleToFill" id="8bC-Xf-vdC">
+                        <rect key="frame" x="0.0" y="0.0" width="414" height="896"/>
+                        <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
+                        <subviews>
+                            <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="00:00:00:00" textAlignment="center" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="f0v-yk-T9n">
+                                <rect key="frame" x="162" y="549" width="106" height="32"/>
+                                <constraints>
+                                    <constraint firstAttribute="height" constant="32" id="aKq-TN-0NA"/>
+                                    <constraint firstAttribute="width" constant="106" id="ea2-qQ-STS"/>
+                                </constraints>
+                                <fontDescription key="fontDescription" name="HelveticaNeue-Bold" family="Helvetica Neue" pointSize="20"/>
+                                <nil key="textColor"/>
+                                <nil key="highlightedColor"/>
+                            </label>
+                            <button opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" adjustsImageWhenHighlighted="NO" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="DRN-Fr-3tC">
+                                <rect key="frame" x="107" y="348" width="200" height="200"/>
+                                <constraints>
+                                    <constraint firstAttribute="height" constant="200" id="B0S-Uf-qYN"/>
+                                    <constraint firstAttribute="height" relation="greaterThanOrEqual" constant="200" id="HlB-1D-LAT"/>
+                                    <constraint firstAttribute="width" relation="greaterThanOrEqual" constant="200" id="pyJ-yv-H5k"/>
+                                    <constraint firstAttribute="width" constant="200" id="qfx-M1-zCG"/>
+                                </constraints>
+                                <fontDescription key="fontDescription" name="Helvetica-Bold" family="Helvetica" pointSize="26"/>
+                                <state key="normal" backgroundImage="recorderoff">
+                                    <color key="titleColor" white="0.0" alpha="1" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
+                                </state>
+                                <connections>
+                                    <action selector="recordButtonClicked:" destination="BYZ-38-t0r" eventType="touchUpInside" id="kea-r3-1ag"/>
+                                </connections>
+                            </button>
+                            <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text=" " textAlignment="center" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="0T3-17-V2w">
+                                <rect key="frame" x="8" y="811" width="398" height="21"/>
+                                <constraints>
+                                    <constraint firstAttribute="height" constant="21" id="6Vq-ZG-pAY"/>
+                                </constraints>
+                                <fontDescription key="fontDescription" name="HelveticaNeue" family="Helvetica Neue" pointSize="12"/>
+                                <nil key="textColor"/>
+                                <nil key="highlightedColor"/>
+                            </label>
+                            <view contentMode="scaleToFill" translatesAutoresizingMaskIntoConstraints="NO" id="mTH-zJ-P3U">
+                                <rect key="frame" x="154" y="320" width="106" height="20"/>
+                                <color key="backgroundColor" systemColor="systemBlueColor" red="0.0" green="0.47843137250000001" blue="1" alpha="1" colorSpace="custom" customColorSpace="sRGB"/>
+                                <constraints>
+                                    <constraint firstAttribute="height" constant="20" id="i9v-u7-R2C"/>
+                                    <constraint firstAttribute="width" constant="106" id="oOX-ra-E62"/>
+                                </constraints>
+                            </view>
+                            <button opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" adjustsImageWhenHighlighted="NO" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="neK-is-M3e">
+                                <rect key="frame" x="106" y="97" width="300" height="30"/>
+                                <constraints>
+                                    <constraint firstAttribute="width" constant="300" id="kTd-N5-4Bq"/>
+                                    <constraint firstAttribute="height" constant="30" id="o2O-0T-Vro"/>
+                                </constraints>
+                                <state key="normal" image="googleok" backgroundImage="googleok">
+                                    <color key="titleColor" white="0.0" alpha="1" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
+                                </state>
+                                <connections>
+                                    <segue destination="ZWU-bW-pbD" kind="show" identifier="SETTINGS" id="T7E-f9-WaW"/>
+                                </connections>
+                            </button>
+                            <button opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="Zye-b3-zYs">
+                                <rect key="frame" x="8" y="780" width="24" height="24"/>
+                                <constraints>
+                                    <constraint firstAttribute="height" constant="24" id="CBC-yd-l0A"/>
+                                    <constraint firstAttribute="width" constant="24" id="zrC-QW-PNN"/>
+                                </constraints>
+                                <state key="normal" image="cancel"/>
+                                <connections>
+                                    <action selector="checkCancelRecording:" destination="BYZ-38-t0r" eventType="touchUpInside" id="ujK-VU-9TI"/>
+                                </connections>
+                            </button>
+                        </subviews>
+                        <color key="backgroundColor" systemColor="systemBackgroundColor" cocoaTouchSystemColor="whiteColor"/>
+                        <constraints>
+                            <constraint firstItem="6Tk-OE-BBY" firstAttribute="trailing" secondItem="neK-is-M3e" secondAttribute="trailing" constant="8" id="1pk-22-0cM"/>
+                            <constraint firstItem="mTH-zJ-P3U" firstAttribute="centerX" secondItem="8bC-Xf-vdC" secondAttribute="centerX" id="30q-Vk-UaC"/>
+                            <constraint firstItem="DRN-Fr-3tC" firstAttribute="centerY" secondItem="8bC-Xf-vdC" secondAttribute="centerY" id="6SQ-Al-SG7"/>
+                            <constraint firstItem="0T3-17-V2w" firstAttribute="leading" secondItem="6Tk-OE-BBY" secondAttribute="leading" constant="8" id="Fhy-x7-Tuj"/>
+                            <constraint firstItem="Zye-b3-zYs" firstAttribute="leading" secondItem="6Tk-OE-BBY" secondAttribute="leading" constant="8" id="I4L-iC-AtY"/>
+                            <constraint firstItem="DRN-Fr-3tC" firstAttribute="firstBaseline" secondItem="f0v-yk-T9n" secondAttribute="baseline" constant="-228.5" id="JTv-2g-sBT"/>
+                            <constraint firstItem="6Tk-OE-BBY" firstAttribute="bottom" secondItem="0T3-17-V2w" secondAttribute="bottom" constant="30" id="M1h-Jg-zfH"/>
+                            <constraint firstItem="neK-is-M3e" firstAttribute="top" secondItem="6Tk-OE-BBY" secondAttribute="top" constant="9" id="P9b-m8-juK"/>
+                            <constraint firstItem="6Tk-OE-BBY" firstAttribute="trailing" secondItem="0T3-17-V2w" secondAttribute="trailing" constant="8" id="RoS-BK-oYu"/>
+                            <constraint firstItem="DRN-Fr-3tC" firstAttribute="centerX" secondItem="8bC-Xf-vdC" secondAttribute="centerX" id="XYf-fw-dq2"/>
+                            <constraint firstItem="f0v-yk-T9n" firstAttribute="centerX" secondItem="8bC-Xf-vdC" secondAttribute="centerX" constant="8" id="oTb-0f-eFX"/>
+                            <constraint firstItem="DRN-Fr-3tC" firstAttribute="firstBaseline" secondItem="mTH-zJ-P3U" secondAttribute="baseline" constant="8" symbolType="layoutAnchor" id="qDs-X2-KgW"/>
+                            <constraint firstItem="0T3-17-V2w" firstAttribute="firstBaseline" secondItem="Zye-b3-zYs" secondAttribute="baseline" constant="18.5" id="zvs-Yn-A8m"/>
+                        </constraints>
+                        <viewLayoutGuide key="safeArea" id="6Tk-OE-BBY"/>
+                    </view>
+                    <navigationItem key="navigationItem" id="m3j-9e-tsD"/>
+                    <connections>
+                        <outlet property="UICancelRecordingButton" destination="Zye-b3-zYs" id="wHf-u7-k4D"/>
+                        <outlet property="UIMeter" destination="mTH-zJ-P3U" id="fdP-Xm-GKE"/>
+                        <outlet property="UIRecordingButton" destination="DRN-Fr-3tC" id="Qab-fJ-QeY"/>
+                        <outlet property="UIRecordingTimer" destination="f0v-yk-T9n" id="r0B-56-Btp"/>
+                        <outlet property="UISettingsButton" destination="neK-is-M3e" id="9QU-eH-8FS"/>
+                        <outlet property="UIUploadStatusText" destination="0T3-17-V2w" id="INb-HH-F2y"/>
+                    </connections>
+                </viewController>
+                <placeholder placeholderIdentifier="IBFirstResponder" id="dkx-z0-nzr" sceneMemberID="firstResponder"/>
+            </objects>
+            <point key="canvasLocation" x="1042.0289855072465" y="137.94642857142856"/>
+        </scene>
+        <!--Settings Controller-->
+        <scene sceneID="jVN-Oo-EUi">
+            <objects>
+                <viewController id="ZWU-bW-pbD" customClass="SettingsController" customModule="Audio_Drive" customModuleProvider="target" sceneMemberID="viewController">
+                    <view key="view" contentMode="scaleToFill" id="0ag-Rf-LlN">
+                        <rect key="frame" x="0.0" y="0.0" width="414" height="896"/>
+                        <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
+                        <subviews>
+                            <button opaque="NO" contentMode="scaleToFill" fixedFrame="YES" contentHorizontalAlignment="center" contentVerticalAlignment="center" buttonType="roundedRect" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="GGV-f8-NEI">
+                                <rect key="frame" x="0.0" y="6" width="77" height="30"/>
+                                <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMaxY="YES"/>
+                                <state key="normal" title="Done"/>
+                                <connections>
+                                    <segue destination="5QJ-yM-MeD" kind="unwind" unwindAction="unwindSettingsScreenWithUnwindSegue:" id="oOa-z0-O4D"/>
+                                </connections>
+                            </button>
+                            <textField opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="left" contentVerticalAlignment="center" text="Audio Drive" borderStyle="roundedRect" textAlignment="natural" minimumFontSize="17" translatesAutoresizingMaskIntoConstraints="NO" id="go9-FE-JI3">
+                                <rect key="frame" x="95.5" y="164" width="223" height="34"/>
+                                <constraints>
+                                    <constraint firstAttribute="width" relation="greaterThanOrEqual" constant="223" id="Zwt-bC-KhC"/>
+                                </constraints>
+                                <fontDescription key="fontDescription" type="system" pointSize="14"/>
+                                <textInputTraits key="textInputTraits"/>
+                            </textField>
+                            <button opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" buttonType="roundedRect" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="OsX-dj-gPC">
+                                <rect key="frame" x="94.5" y="813" width="225" height="36"/>
+                                <constraints>
+                                    <constraint firstAttribute="height" constant="36" id="AO5-eI-5a3"/>
+                                    <constraint firstAttribute="width" relation="greaterThanOrEqual" constant="225" id="v7n-oR-fjC"/>
+                                </constraints>
+                                <fontDescription key="fontDescription" name="HelveticaNeue" family="Helvetica Neue" pointSize="17"/>
+                                <state key="normal" title="Google Button">
+                                    <color key="titleColor" white="1" alpha="1" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
+                                </state>
+                                <connections>
+                                    <action selector="SignIntoGoogle:" destination="ZWU-bW-pbD" eventType="touchUpInside" id="d4g-QA-xMH"/>
+                                </connections>
+                            </button>
+                            <segmentedControl opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="left" contentVerticalAlignment="top" segmentControlStyle="plain" selectedSegmentIndex="0" translatesAutoresizingMaskIntoConstraints="NO" id="uys-HG-QhH">
+                                <rect key="frame" x="94.5" y="243" width="225" height="32"/>
+                                <constraints>
+                                    <constraint firstAttribute="width" relation="greaterThanOrEqual" constant="225" id="QlV-Gy-Hk1"/>
+                                </constraints>
+                                <segments>
+                                    <segment title="Mono"/>
+                                    <segment title="Stereo"/>
+                                </segments>
+                            </segmentedControl>
+                            <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="Type" textAlignment="center" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="X7u-ri-xDg">
+                                <rect key="frame" x="94.5" y="218" width="225" height="21"/>
+                                <constraints>
+                                    <constraint firstAttribute="width" constant="225" id="wx7-GQ-LvZ"/>
+                                </constraints>
+                                <fontDescription key="fontDescription" type="system" pointSize="17"/>
+                                <nil key="textColor"/>
+                                <nil key="highlightedColor"/>
+                            </label>
+                            <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="Google Drive Upload Folder" textAlignment="center" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="Xu3-lL-eKS">
+                                <rect key="frame" x="94.5" y="141" width="225" height="21"/>
+                                <constraints>
+                                    <constraint firstAttribute="width" relation="greaterThanOrEqual" constant="225" id="iZS-xJ-AoN"/>
+                                </constraints>
+                                <fontDescription key="fontDescription" type="system" pointSize="17"/>
+                                <nil key="textColor"/>
+                                <nil key="highlightedColor"/>
+                            </label>
+                            <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="Bitrate " textAlignment="center" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="3lJ-dH-gCF">
+                                <rect key="frame" x="179.5" y="301" width="55" height="21"/>
+                                <fontDescription key="fontDescription" type="system" pointSize="17"/>
+                                <nil key="textColor"/>
+                                <nil key="highlightedColor"/>
+                            </label>
+                            <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="0 Files Awaiting Upload" textAlignment="center" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="hzk-70-DaI">
+                                <rect key="frame" x="94.5" y="393" width="225" height="21"/>
+                                <constraints>
+                                    <constraint firstAttribute="width" constant="225" id="BU9-e1-2tf"/>
+                                </constraints>
+                                <fontDescription key="fontDescription" type="system" pointSize="17"/>
+                                <nil key="textColor"/>
+                                <nil key="highlightedColor"/>
+                            </label>
+                            <button opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" buttonType="roundedRect" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="cPp-cz-7FK">
+                                <rect key="frame" x="94.5" y="414" width="225" height="30"/>
+                                <state key="normal" title="Delete Pending Uploads">
+                                    <color key="titleColor" cocoaTouchSystemColor="darkTextColor"/>
+                                </state>
+                                <connections>
+                                    <action selector="deletePendingUploadFiles:" destination="ZWU-bW-pbD" eventType="touchUpInside" id="w2q-FL-Pje"/>
+                                </connections>
+                            </button>
+                            <segmentedControl opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="left" contentVerticalAlignment="top" segmentControlStyle="plain" selectedSegmentIndex="0" translatesAutoresizingMaskIntoConstraints="NO" id="WP4-9d-FqC">
+                                <rect key="frame" x="94.5" y="329" width="225" height="32"/>
+                                <constraints>
+                                    <constraint firstAttribute="width" constant="225" id="GW0-Wt-g9M"/>
+                                </constraints>
+                                <segments>
+                                    <segment title="96,000"/>
+                                    <segment title="128,000"/>
+                                    <segment title="192,000"/>
+                                </segments>
+                            </segmentedControl>
+                        </subviews>
+                        <color key="backgroundColor" systemColor="systemBackgroundColor" cocoaTouchSystemColor="whiteColor"/>
+                        <constraints>
+                            <constraint firstItem="OsX-dj-gPC" firstAttribute="centerX" secondItem="0ag-Rf-LlN" secondAttribute="centerX" id="2PU-D4-9Hr"/>
+                            <constraint firstItem="3lJ-dH-gCF" firstAttribute="top" secondItem="uys-HG-QhH" secondAttribute="bottom" constant="27" id="453-Ly-3A6"/>
+                            <constraint firstItem="WP4-9d-FqC" firstAttribute="centerX" secondItem="0ag-Rf-LlN" secondAttribute="centerX" id="DAp-6H-Fj3"/>
+                            <constraint firstItem="go9-FE-JI3" firstAttribute="centerX" secondItem="0ag-Rf-LlN" secondAttribute="centerX" id="EYh-qS-0NV"/>
+                            <constraint firstItem="cPp-cz-7FK" firstAttribute="leading" secondItem="hzk-70-DaI" secondAttribute="leading" id="Gk2-Eb-lxz"/>
+                            <constraint firstItem="cPp-cz-7FK" firstAttribute="top" secondItem="hzk-70-DaI" secondAttribute="bottom" id="MeV-JW-VIy"/>
+                            <constraint firstItem="Xu3-lL-eKS" firstAttribute="centerX" secondItem="0ag-Rf-LlN" secondAttribute="centerX" id="OkL-x0-jMX"/>
+                            <constraint firstItem="uys-HG-QhH" firstAttribute="top" secondItem="X7u-ri-xDg" secondAttribute="bottom" constant="4" id="QIi-nA-en2"/>
+                            <constraint firstItem="cPp-cz-7FK" firstAttribute="trailing" secondItem="hzk-70-DaI" secondAttribute="trailing" id="Y2d-5b-BZm"/>
+                            <constraint firstItem="X7u-ri-xDg" firstAttribute="top" secondItem="go9-FE-JI3" secondAttribute="bottom" constant="20" id="YzL-Go-9KZ"/>
+                            <constraint firstItem="Xu3-lL-eKS" firstAttribute="centerX" secondItem="0ag-Rf-LlN" secondAttribute="centerX" id="gIe-zD-xyh"/>
+                            <constraint firstItem="eSK-C4-Gif" firstAttribute="bottom" secondItem="OsX-dj-gPC" secondAttribute="bottom" constant="13" id="hMx-ay-210"/>
+                            <constraint firstItem="X7u-ri-xDg" firstAttribute="centerX" secondItem="0ag-Rf-LlN" secondAttribute="centerX" id="iz9-W2-ekI"/>
+                            <constraint firstItem="Xu3-lL-eKS" firstAttribute="top" secondItem="eSK-C4-Gif" secondAttribute="top" constant="53" id="lJA-Ue-TxX"/>
+                            <constraint firstItem="go9-FE-JI3" firstAttribute="firstBaseline" secondItem="Xu3-lL-eKS" secondAttribute="baseline" constant="28" id="n2z-VE-HxL"/>
+                            <constraint firstItem="WP4-9d-FqC" firstAttribute="top" secondItem="3lJ-dH-gCF" secondAttribute="bottom" constant="7" id="uOF-ya-2yW"/>
+                            <constraint firstItem="hzk-70-DaI" firstAttribute="centerX" secondItem="0ag-Rf-LlN" secondAttribute="centerX" id="uyP-lZ-RMl"/>
+                            <constraint firstItem="uys-HG-QhH" firstAttribute="top" secondItem="X7u-ri-xDg" secondAttribute="bottom" constant="4" id="wG5-Fv-hdV"/>
+                            <constraint firstItem="3lJ-dH-gCF" firstAttribute="centerX" secondItem="0ag-Rf-LlN" secondAttribute="centerX" id="wQ7-TJ-hDS"/>
+                            <constraint firstItem="hzk-70-DaI" firstAttribute="top" secondItem="WP4-9d-FqC" secondAttribute="bottom" constant="33" id="x69-34-MHE"/>
+                            <constraint firstItem="uys-HG-QhH" firstAttribute="centerX" secondItem="0ag-Rf-LlN" secondAttribute="centerX" id="xWc-cs-dNm"/>
+                        </constraints>
+                        <viewLayoutGuide key="safeArea" id="eSK-C4-Gif"/>
+                    </view>
+                    <navigationItem key="navigationItem" id="SoA-Oa-FpO"/>
+                    <connections>
+                        <outlet property="UIAudioBitRate" destination="WP4-9d-FqC" id="9CV-t2-ptX"/>
+                        <outlet property="UIAudioType" destination="uys-HG-QhH" id="3SA-xF-ovO"/>
+                        <outlet property="UIDeletePendingsButton" destination="cPp-cz-7FK" id="EFj-LO-y8m"/>
+                        <outlet property="UIGoogleButton" destination="OsX-dj-gPC" id="iek-nk-btg"/>
+                        <outlet property="UIPendingUploadLabel" destination="hzk-70-DaI" id="7z6-tJ-d4p"/>
+                        <outlet property="UIUploadFolder" destination="go9-FE-JI3" id="DOi-Od-SUW"/>
+                    </connections>
+                </viewController>
+                <placeholder placeholderIdentifier="IBFirstResponder" id="Q0l-4A-QBe" userLabel="First Responder" customClass="UIResponder" sceneMemberID="firstResponder"/>
+                <exit id="5QJ-yM-MeD" userLabel="Exit" sceneMemberID="exit"/>
+            </objects>
+            <point key="canvasLocation" x="1752.1739130434785" y="168.75"/>
+        </scene>
+        <!--Navigation Controller-->
+        <scene sceneID="FKo-rr-dtw">
+            <objects>
+                <navigationController automaticallyAdjustsScrollViewInsets="NO" id="bnC-Ap-4BZ" sceneMemberID="viewController">
+                    <toolbarItems/>
+                    <navigationBar key="navigationBar" contentMode="scaleToFill" insetsLayoutMarginsFromSafeArea="NO" id="uel-eI-JTZ">
+                        <rect key="frame" x="0.0" y="44" width="414" height="44"/>
+                        <autoresizingMask key="autoresizingMask"/>
+                    </navigationBar>
+                    <nil name="viewControllers"/>
+                    <connections>
+                        <segue destination="BYZ-38-t0r" kind="relationship" relationship="rootViewController" id="2Bc-2X-8OY"/>
+                    </connections>
+                </navigationController>
+                <placeholder placeholderIdentifier="IBFirstResponder" id="ocW-zD-YDQ" userLabel="First Responder" customClass="UIResponder" sceneMemberID="firstResponder"/>
+            </objects>
+            <point key="canvasLocation" x="131.8840579710145" y="137.94642857142856"/>
+        </scene>
+    </scenes>
+    <resources>
+        <image name="cancel" width="121" height="121"/>
+        <image name="googleok" width="500" height="50"/>
+        <image name="recorderoff" width="500" height="500"/>
+    </resources>
+</document>
