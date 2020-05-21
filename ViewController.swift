@@ -67,14 +67,14 @@ class ViewController: UIViewController, AVAudioRecorderDelegate, GIDSignInDelega
     
     
     // NEW *************************
-    var audioEngine : AVAudioEngine!
-    var audioFile : AVAudioFile!
-    var audioPlayer : AVAudioPlayerNode!
-    var outref: ExtAudioFileRef?
-    var audioFilePlayer: AVAudioPlayerNode!
-    var mixer : AVAudioMixerNode!
-    var isPlay = false
-    var isMP3Active = false
+    var AudioEngine : AVAudioEngine!
+    var AudioFile : AVAudioFile!
+    var AudioPlayer : AVAudioPlayerNode!
+    var Outref: ExtAudioFileRef?
+    var AudioFilePlayer: AVAudioPlayerNode!
+    var Mixer : AVAudioMixerNode!
+    var IsPlay = false
+    var IsMP3Active = false
     // NEW *************************
     
     var PATH_TMP_WAV = ""
@@ -112,11 +112,11 @@ class ViewController: UIViewController, AVAudioRecorderDelegate, GIDSignInDelega
         UICancelRecordingButton.isHidden = true
         
         // NEW *************************
-        self.audioEngine = AVAudioEngine()
-        self.audioFilePlayer = AVAudioPlayerNode()
-        self.mixer = AVAudioMixerNode()
-        self.audioEngine.attach(audioFilePlayer)
-        self.audioEngine.attach(mixer)
+        AudioEngine = AVAudioEngine()
+        AudioFilePlayer = AVAudioPlayerNode()
+        Mixer = AVAudioMixerNode()
+        AudioEngine.attach(AudioFilePlayer)
+        AudioEngine.attach(Mixer)
         // NEW *************************
 
         
@@ -312,8 +312,8 @@ class ViewController: UIViewController, AVAudioRecorderDelegate, GIDSignInDelega
              channels: numberChannels,
              interleaved: true)
          
-         self.audioEngine.connect(self.audioEngine.inputNode, to: self.mixer, format: format)
-         self.audioEngine.connect(self.mixer, to: self.audioEngine.mainMixerNode, format: format)
+         AudioEngine.connect(AudioEngine.inputNode, to: Mixer, format: format)
+         AudioEngine.connect(Mixer, to: AudioEngine.mainMixerNode, format: format)
 
 
          _ = ExtAudioFileCreateWithURL(URL(fileURLWithPath: PATH_TMP_WAV) as CFURL,
@@ -321,16 +321,16 @@ class ViewController: UIViewController, AVAudioRecorderDelegate, GIDSignInDelega
              (format?.streamDescription)!,
              nil,
              AudioFileFlags.eraseFile.rawValue,
-             &outref)
+             &Outref)
 
-         self.mixer.installTap(onBus: 0, bufferSize: AVAudioFrameCount((format?.sampleRate)!), format: format, block: { (buffer: AVAudioPCMBuffer!, time: AVAudioTime!) -> Void in
+         Mixer.installTap(onBus: 0, bufferSize: AVAudioFrameCount((format?.sampleRate)!), format: format, block: { (buffer: AVAudioPCMBuffer!, time: AVAudioTime!) -> Void in
 
              let audioBuffer : AVAudioBuffer = buffer
-             _ = ExtAudioFileWrite(self.outref!, buffer.frameLength, audioBuffer.audioBufferList)
+             _ = ExtAudioFileWrite(self.Outref!, buffer.frameLength, audioBuffer.audioBufferList)
          })
 
-         try! self.audioEngine.start()
-         self.startMP3Rec()
+         try! AudioEngine.start()
+         startMP3Rec()
      }
 
      
@@ -351,7 +351,7 @@ class ViewController: UIViewController, AVAudioRecorderDelegate, GIDSignInDelega
         }
         let numberChannels : Int32 = ConfigAudioType == "Mono" ? 1 : 2
 
-        self.isMP3Active = true
+        IsMP3Active = true
         var total = 0
         var read = 0
         var write: Int32 = 0
@@ -385,7 +385,7 @@ class ViewController: UIViewController, AVAudioRecorderDelegate, GIDSignInDelega
                          fwrite(mp3buffer, Int(write), 1, mp3)
                          total += read * MemoryLayout<Int16>.size
                          fclose(pcm)
-                     } else if !self.isMP3Active {
+                     } else if !self.IsMP3Active {
                          _ = lame_encode_flush(lame, mp3buffer, MP3_SIZE)
                          _ = fwrite(mp3buffer, Int(write), 1, mp3)
                          break
@@ -402,18 +402,18 @@ class ViewController: UIViewController, AVAudioRecorderDelegate, GIDSignInDelega
          
     func stopMP3Rec() {
         
-        self.isMP3Active = false
+        IsMP3Active = false
     }
      
      
      func stopRecord() {
 
-         self.audioFilePlayer.stop()
-         self.audioEngine.stop()
-         self.mixer.removeTap(onBus: 0)
+         AudioFilePlayer.stop()
+         AudioEngine.stop()
+         Mixer.removeTap(onBus: 0)
 
-         self.stopMP3Rec()
-         ExtAudioFileDispose(self.outref!)
+         stopMP3Rec()
+         ExtAudioFileDispose(Outref!)
 
          try! AVAudioSession.sharedInstance().setActive(false)
          deleteFile(named: NAME_TMP_WAV)
