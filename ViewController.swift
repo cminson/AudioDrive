@@ -74,7 +74,7 @@ class ViewController: UIViewController, AVAudioRecorderDelegate, GIDSignInDelega
     var AudioFilePlayer: AVAudioPlayerNode!
     var Mixer : AVAudioMixerNode!
     var IsPlay = false
-    var IsMP3Active = false
+    var MP3Active = false
     // NEW *************************
     
     var PATH_TMP_WAV = ""
@@ -108,18 +108,13 @@ class ViewController: UIViewController, AVAudioRecorderDelegate, GIDSignInDelega
         UIMeter.addSubview(UIMeterUpdate)
           
         RecordingActive = false
-        recordingInit()
         UICancelRecordingButton.isHidden = true
         
-        // NEW *************************
         AudioEngine = AVAudioEngine()
         AudioFilePlayer = AVAudioPlayerNode()
         Mixer = AVAudioMixerNode()
         AudioEngine.attach(AudioFilePlayer)
         AudioEngine.attach(Mixer)
-        // NEW *************************
-
-        
      }
     
 
@@ -140,10 +135,9 @@ class ViewController: UIViewController, AVAudioRecorderDelegate, GIDSignInDelega
     
     
     override func didReceiveMemoryWarning() {
+        
         super.didReceiveMemoryWarning()
     }
-    
- 
     
     
     override func prepare(for segue: UIStoryboardSegue, sender: Any?) {
@@ -240,7 +234,7 @@ class ViewController: UIViewController, AVAudioRecorderDelegate, GIDSignInDelega
             (AudioFileName, AudioFilePath) = generateRecordingPaths()
             AudioFileNameCurrentlyRecording = AudioFileName
             startMeterThread()
-            startRecord()
+            startRecording()
             RecorderTakingInput = true
             UICancelRecordingButton.isHidden = false
 
@@ -248,7 +242,7 @@ class ViewController: UIViewController, AVAudioRecorderDelegate, GIDSignInDelega
             RecordingActive = false
             UICancelRecordingButton.isHidden = true
 
-            stopRecord()
+            stopRecording()
             AudioFileNameCurrentlyRecording = ""
 
             UIRecordingButton.setImage(UIImage(named: "recorderoff"), for: UIControl.State.normal)
@@ -297,46 +291,40 @@ class ViewController: UIViewController, AVAudioRecorderDelegate, GIDSignInDelega
     }
     
     
-    func startRecord() {
+    func startRecording() {
 
 
         let numberChannels : UInt32 = ConfigAudioType == "Mono" ? 1 : 2
 
+        // configure to create WAV recording, start it
+        try! AVAudioSession.sharedInstance().setCategory(AVAudioSession.Category.playAndRecord)
+        try! AVAudioSession.sharedInstance().setActive(true)
 
-         try! AVAudioSession.sharedInstance().setCategory(AVAudioSession.Category.playAndRecord)
-
-         try! AVAudioSession.sharedInstance().setActive(true)
-
-         let format = AVAudioFormat(commonFormat: AVAudioCommonFormat.pcmFormatInt16,
+        let format = AVAudioFormat(commonFormat: AVAudioCommonFormat.pcmFormatInt16,
                                     sampleRate: 44100.0,
              channels: numberChannels,
              interleaved: true)
          
-         AudioEngine.connect(AudioEngine.inputNode, to: Mixer, format: format)
-         AudioEngine.connect(Mixer, to: AudioEngine.mainMixerNode, format: format)
+        AudioEngine.connect(AudioEngine.inputNode, to: Mixer, format: format)
+        AudioEngine.connect(Mixer, to: AudioEngine.mainMixerNode, format: format)
 
-
-         _ = ExtAudioFileCreateWithURL(URL(fileURLWithPath: PATH_TMP_WAV) as CFURL,
+        _ = ExtAudioFileCreateWithURL(URL(fileURLWithPath: PATH_TMP_WAV) as CFURL,
              kAudioFileWAVEType,
              (format?.streamDescription)!,
              nil,
              AudioFileFlags.eraseFile.rawValue,
              &Outref)
 
-         Mixer.installTap(onBus: 0, bufferSize: AVAudioFrameCount((format?.sampleRate)!), format: format, block: { (buffer: AVAudioPCMBuffer!, time: AVAudioTime!) -> Void in
+        Mixer.installTap(onBus: 0, bufferSize: AVAudioFrameCount((format?.sampleRate)!), format: format, block: { (buffer: AVAudioPCMBuffer!, time: AVAudioTime!) -> Void in
 
-             let audioBuffer : AVAudioBuffer = buffer
-             _ = ExtAudioFileWrite(self.Outref!, buffer.frameLength, audioBuffer.audioBufferList)
-         })
+            let audioBuffer : AVAudioBuffer = buffer
+            _ = ExtAudioFileWrite(self.Outref!, buffer.frameLength, audioBuffer.audioBufferList)
+        })
 
-         try! AudioEngine.start()
-         startMP3Rec()
-     }
-
-     
-
-    func startMP3Rec() {
+        try! AudioEngine.start()
         
+        
+        // begin MP3 mixin
         var rate: Int32 = 96
         switch ConfigAudioBitRate {
         case "96,000":
@@ -349,26 +337,23 @@ class ViewController: UIViewController, AVAudioRecorderDelegate, GIDSignInDelega
             print("ERROR \(ConfigAudioBitRate)")
             fatalError(ConfigAudioBitRate)
         }
-        let numberChannels : Int32 = ConfigAudioType == "Mono" ? 1 : 2
+        let numberLAMEChannels : Int32 = ConfigAudioType == "Mono" ? 1 : 2
 
-        IsMP3Active = true
+        MP3Active = true
         var total = 0
         var read = 0
         var write: Int32 = 0
 
-        let mp3path = AudioFilePath
-        let path = PATH_TMP_WAV
-         
-        var pcm: UnsafeMutablePointer<FILE> = fopen(path, "rb")
+        var pcm: UnsafeMutablePointer<FILE> = fopen(PATH_TMP_WAV, "rb")
         fseek(pcm, 4*1024, SEEK_CUR)
-        let mp3: UnsafeMutablePointer<FILE> = fopen(mp3path, "wb")
+        let mp3: UnsafeMutablePointer<FILE> = fopen(AudioFilePath, "wb")
         let PCM_SIZE: Int = 8192
         let MP3_SIZE: Int32 = 8192
         let pcmbuffer = UnsafeMutablePointer<Int16>.allocate(capacity: Int(PCM_SIZE*2))
         let mp3buffer = UnsafeMutablePointer<UInt8>.allocate(capacity: Int(MP3_SIZE))
 
         let lame = lame_init()
-        lame_set_num_channels(lame, numberChannels)
+        lame_set_num_channels(lame, numberLAMEChannels)
         lame_set_mode(lame, MONO)
         lame_set_in_samplerate(lame, 44100)
         lame_set_brate(lame, rate)
@@ -377,7 +362,7 @@ class ViewController: UIViewController, AVAudioRecorderDelegate, GIDSignInDelega
 
         DispatchQueue.global(qos: .default).async {
             while true {
-                     pcm = fopen(path, "rb")
+                pcm = fopen(self.PATH_TMP_WAV, "rb")
                      fseek(pcm, 4*1024 + total, SEEK_CUR)
                      read = fread(pcmbuffer, MemoryLayout<Int16>.size, PCM_SIZE, pcm)
                      if read != 0 {
@@ -385,7 +370,7 @@ class ViewController: UIViewController, AVAudioRecorderDelegate, GIDSignInDelega
                          fwrite(mp3buffer, Int(write), 1, mp3)
                          total += read * MemoryLayout<Int16>.size
                          fclose(pcm)
-                     } else if !self.IsMP3Active {
+                     } else if !self.MP3Active {
                          _ = lame_encode_flush(lame, mp3buffer, MP3_SIZE)
                          _ = fwrite(mp3buffer, Int(write), 1, mp3)
                          break
@@ -400,52 +385,27 @@ class ViewController: UIViewController, AVAudioRecorderDelegate, GIDSignInDelega
         }
     }
          
-    func stopMP3Rec() {
-        
-        IsMP3Active = false
-    }
-     
-     
-     func stopRecord() {
+         
+    func stopRecording() {
 
-         AudioFilePlayer.stop()
-         AudioEngine.stop()
-         Mixer.removeTap(onBus: 0)
+        // stop audio engine and player
+        // then halt the MP3 encoding (by setting MP3Active = false
+        AudioFilePlayer.stop()
+        AudioEngine.stop()
+        Mixer.removeTap(onBus: 0)
 
-         stopMP3Rec()
-         ExtAudioFileDispose(Outref!)
+        MP3Active = false
+        ExtAudioFileDispose(Outref!)
 
-         try! AVAudioSession.sharedInstance().setActive(false)
-         deleteFile(named: NAME_TMP_WAV)
+        try! AVAudioSession.sharedInstance().setActive(false)
+        deleteFile(named: NAME_TMP_WAV)
      }
 
-     
-   
     
-    func recordingInit() {
-         RecordingSession = AVAudioSession.sharedInstance()
-
-         do {
-             try RecordingSession.setCategory(.playAndRecord, mode: .default)
-             try RecordingSession.setActive(true)
-             RecordingSession.requestRecordPermission() { [unowned self] allowed in
-                 DispatchQueue.main.async {
-                     if allowed {
-                         print("enabled recording UI")
-                     } else {
-                         print("Failed to init recording UI")
-                         
-                     }
-                 }
-             }
-         } catch {
-             print("ERROR")
-         }
-     }
-     
-
+    /*
+   
     func startRecording(path pathNativeRecording: String) {
-         /*
+      
          var bitRate: Int = 16000
          let sampleRate = SAMPLE_RATE
          
@@ -494,7 +454,7 @@ class ViewController: UIViewController, AVAudioRecorderDelegate, GIDSignInDelega
             UIUploadStatusText.text = ""
 
          }
- */
+ 
      }
      
      
@@ -505,6 +465,7 @@ class ViewController: UIViewController, AVAudioRecorderDelegate, GIDSignInDelega
         AudioRecorder = nil
          
      }
+ */
     
     
     func cancelRecording() {
