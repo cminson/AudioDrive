@@ -50,8 +50,7 @@ class SettingsController: UIViewController, GIDSignInDelegate {
     @IBOutlet weak var UIAudioType: UISegmentedControl!
     @IBOutlet weak var UIAudioSampleRate: UISegmentedControl!
     @IBOutlet weak var UIAudioBitRate: UISegmentedControl!
-    @IBOutlet weak var UIPendingUploadLabel: UILabel!
-    @IBOutlet weak var UIDeletePendingsButton: UIButton!
+
     
     @IBOutlet weak var UIGoogleButton: UIButton!
     
@@ -64,25 +63,6 @@ class SettingsController: UIViewController, GIDSignInDelegate {
 
         super.viewDidLoad()
         self.title = "Settings"
-        
-        //UIDeletePendingsButton.backgroundColor = COLOR_GREENISH
-        UIDeletePendingsButton.layer.borderWidth = 1
-        UIDeletePendingsButton.layer.borderColor = UIColor.lightGray.cgColor
-        
-        /*
-        let count = countUploadableFiles()
-        if (count > 0) && signedIntoGoogle() == false {
-            UIDeletePendingsButton.isHidden = false
-            UIPendingUploadLabel.isHidden = false
-            UIPendingUploadLabel.text = "audios/ awaiting upload: \(count)"
-        } else {
-            UIDeletePendingsButton.isHidden = true
-            UIPendingUploadLabel.isHidden = true
-        }
-         */
-        UIDeletePendingsButton.isHidden = true
-        UIPendingUploadLabel.isHidden = true
-
         
         GIDSignIn.sharedInstance()?.clientID = CLIENT_ID
         GIDSignIn.sharedInstance().delegate = self
@@ -176,7 +156,7 @@ class SettingsController: UIViewController, GIDSignInDelegate {
         parentController?.setGoogleStatusUI()
         
         // upload anything that is hanging around locally
-        parentController?.configureUploadFolderID(uploadFiles: true)
+        parentController?.connectToGoogleDrive(uploadFiles: true)
       }
       
       
@@ -187,75 +167,6 @@ class SettingsController: UIViewController, GIDSignInDelegate {
       }
     
     
-    @IBAction func deletePendingUploadFiles(_ sender: Any) {
-        
-        let alert = UIAlertController(title: "Are you sure?",
-                                        message: "This action will delete all  audio recordings on this device that are queued for uploading",
-                                        preferredStyle: UIAlertController.Style.alert)
-
-          alert.addAction(UIAlertAction(title: "No, Don't Delete", style: UIAlertAction.Style.default, handler: { _ in
-              //Cancel Action
-          }))
-          alert.addAction(UIAlertAction(title: "Yes, Do It",
-                                        style: UIAlertAction.Style.default,
-                                        handler: {(_: UIAlertAction!) in
-                                         
-                                          self.deleteAllFiles()
-          }))
-          self.present(alert, animated: true, completion: nil)
-    }
-        
-        
-    func deleteAllFiles()  {
-        print("deleteAllFiles")
-        
-        var count = countUploadableFiles()
-        let fileManager = FileManager.default
-        do {
-            let audioFileList = try fileManager.contentsOfDirectory(atPath: PATH_DOCUMENTS)
-            for audioFile in audioFileList {
-                deleteFile(named: audioFile)
-                count -= 1
-                UIPendingUploadLabel.text = "audios awaiting upload: \(count)"
-            }
-        } catch (let error) {
-                print("deleteAllFiles \(error)")
-        }
-    }
-
-    
-    func countUploadableFiles() -> Int {
-          
-          print("countUploadableFiles")
-          let fileManager = FileManager.default
-          do {
-              let audioFileList = try fileManager.contentsOfDirectory(atPath: PATH_DOCUMENTS)
-              var count = 0
-              for audioFile in audioFileList {
-                  if audioFile.contains(NATIVE_AUDIO_SUFFIX) == false {continue}                  
-                  count += 1
-              }
-              return count
-          } catch (let error) {
-              print("List Error \(error)")
-               return 0
-          }
-      }
-
-    
-    func deleteFile(named audioFileName:String) {
-    
-        print("deleteFile")
-        do {
-             let audioFilePath = "file://" + PATH_DOCUMENTS + audioFileName
-             print(audioFilePath)
-             try FileManager.default.removeItem(at: URL(string: audioFilePath)!)
-           
-        } catch (let error) {
-            print("deleteFile \(error)")
-        }
-    }
-
     
     @IBAction func SignIntoGoogle(_ sender: Any) {
         

@@ -6,6 +6,7 @@
 //  Copyright © 2020 Christopher Minson. All rights reserved.
 //
 
+/*
 import UIKit
 import Foundation
 import SystemConfiguration
@@ -15,10 +16,10 @@ import mobileffmpeg
 import GoogleSignIn
 import GoogleAPIClientForREST
 import GTMSessionFetcher
-import lame
 
 
 
+var PATH_DOCUMENTS = ""     // where all talks are stored
 
 let NATIVE_AUDIO_SUFFIX = ".m4a"
 let MP3_AUDIO_SUFFIX = ".mp3"
@@ -26,11 +27,6 @@ let AUDIO_PREFIX = "ad."
 let APP_TITLE = "Audio Drive"
 let GOOGLE_DRIVE_ROOT_FOLDER = "!ROOT!"     // special string indicating upload is root directory, not subfolder
 let MAX_DECIBLES : Float = 70.0
-
-
-// our sample rate is 44.1, expressed in two numbers for lame and AV
-let SAMPLE_RATE_LAME : Int32 = 44100
-let SAMPLE_RATE_AV = 44100.0
 
 var AudioDriveGoogleUser: GIDGoogleUser?
 
@@ -62,29 +58,15 @@ class ViewController: UIViewController, AVAudioRecorderDelegate, GIDSignInDelega
     var RecordingActive: Bool! = false
     
     var AveragePower : Float? = 0.0
-    var AudioFileName : String = ""
-    var AudioFilePath : String = ""
+    var AudioFileNameNative : String = ""
+    var AudioFileNameMP3 : String = ""
+    var AudioFilePathNative : String = ""
+    var AudioFilePathMP3 : String = ""
     var RecorderTakingInput = true
     var AudioFileNameCurrentlyRecording = ""
     
-    var DOCUMENTS_URL : URL!
-    var DOCUMENTS_PATH = ""
+    let DocumentsDirectory = FileManager().urls(for: .documentDirectory, in: .userDomainMask).first!
     
-    
-    // NEW *************************
-    var AudioEngine : AVAudioEngine!
-    var AudioFile : AVAudioFile!
-    var AudioPlayer : AVAudioPlayerNode!
-    var Outref: ExtAudioFileRef?
-    var AudioFilePlayer: AVAudioPlayerNode!
-    var Mixer : AVAudioMixerNode!
-    var IsPlay = false
-    var MP3Active = false
-    // NEW *************************
-    
-    var TMP_WAV_PATH = ""
-    let TMP_WAV_NAME = "tmp.wav"
-
     
     override func viewDidLoad() {
         
@@ -92,11 +74,8 @@ class ViewController: UIViewController, AVAudioRecorderDelegate, GIDSignInDelega
         title = "Audio Drive"
         Settings().loadSettings()
         
-        DOCUMENTS_URL = FileManager().urls(for: .documentDirectory, in: .userDomainMask).first!
-        DOCUMENTS_PATH = NSSearchPathForDirectoriesInDomains(.documentDirectory, .userDomainMask, true)[0] + "/"
-        TMP_WAV_PATH = DOCUMENTS_PATH + TMP_WAV_NAME
-
-        print("DocumentPath: ", DOCUMENTS_PATH)
+        PATH_DOCUMENTS = NSSearchPathForDirectoriesInDomains(.documentDirectory, .userDomainMask, true)[0] + "/"
+        print("DocumentPath: ", PATH_DOCUMENTS)
         
         deactivateRecordingUI()
         
@@ -114,35 +93,19 @@ class ViewController: UIViewController, AVAudioRecorderDelegate, GIDSignInDelega
         UIMeter.addSubview(UIMeterUpdate)
           
         RecordingActive = false
+        recordingInit()
         UICancelRecordingButton.isHidden = true
         
-        AudioEngine = AVAudioEngine()
-        AudioFilePlayer = AVAudioPlayerNode()
-        Mixer = AVAudioMixerNode()
-        AudioEngine.attach(AudioFilePlayer)
-        AudioEngine.attach(Mixer)
      }
     
 
     override func viewWillAppear(_ animated: Bool) {
 
         print("view will appear")
-        connectToGoogleDrive(uploadFiles: false)
+        configureUploadFolderID(uploadFiles: false)
         setGoogleStatusUI()
         
-        if AVCaptureDevice.authorizationStatus(for: AVMediaType.audio) != .authorized {
-            AVCaptureDevice.requestAccess(for: AVMediaType.audio,
-                completionHandler: { (granted: Bool) in
-            })
-        }
-        
         super.viewWillAppear(animated)
-    }
-    
-    
-    override func didReceiveMemoryWarning() {
-        
-        super.didReceiveMemoryWarning()
     }
     
     
@@ -158,7 +121,7 @@ class ViewController: UIViewController, AVAudioRecorderDelegate, GIDSignInDelega
             controller.parentController = self
        default:
            fatalError("Unexpected Segue Identifier; \(segue.identifier!)")
-       }       
+       }
     }
     
     //GIDSignInDelegate
@@ -177,8 +140,9 @@ class ViewController: UIViewController, AVAudioRecorderDelegate, GIDSignInDelega
           
           AudioDriveGoogleUser = user
           GoogleDriveService.authorizer = user.authentication.fetcherAuthorizer()
-          connectToGoogleDrive(uploadFiles: false)
+          configureUploadFolderID(uploadFiles: false)
 
+         
           print("User signed in")
     }
       
@@ -236,28 +200,10 @@ class ViewController: UIViewController, AVAudioRecorderDelegate, GIDSignInDelega
         
             UIUploadStatusText.text = ""
             activateRecordingUI()
-            
-            var fileExists: Bool
-            var audioFileName, audioFilePath : String
-            
-            let fileManager = FileManager.default
-            repeat {
-                let format = DateFormatter()
-                format.dateFormat = "yyMMdd.HHmmss"
-                let formattedDate = format.string(from: Date())
-                
-                audioFileName = AUDIO_PREFIX + formattedDate +  MP3_AUDIO_SUFFIX
-                audioFilePath = DOCUMENTS_URL.appendingPathComponent(audioFileName).path
-                fileExists = fileManager.fileExists(atPath: audioFilePath)
-            } while (fileExists == true)
-            
-            AudioFileName = audioFileName
-            AudioFilePath = audioFilePath
-            
-            
-            AudioFileNameCurrentlyRecording = AudioFileName
+            (AudioFileNameNative, AudioFileNameMP3, AudioFilePathNative, AudioFilePathMP3) = generateRecordingPaths()
+            AudioFileNameCurrentlyRecording = AudioFileNameNative
+            startRecording(path: AudioFilePathNative)
             startMeterThread()
-            startRecording()
             RecorderTakingInput = true
             UICancelRecordingButton.isHidden = false
 
@@ -275,14 +221,14 @@ class ViewController: UIViewController, AVAudioRecorderDelegate, GIDSignInDelega
 
             // if not signed in, just keep file stored locally until next log in
             if self.signedIntoGoogle() == false {
-                self.UIUploadStatusText.text = "\(AudioFileName) stored locally until next login"
+                self.UIUploadStatusText.text = "\(AudioFileNameMP3) stored locally until next login"
                 self.RecorderTakingInput = true
                 return
             }
             
             // if upload folder hasn't been set yet, also store locally
             guard let uploadFolderID = UploadFolderID else {
-                 self.UIUploadStatusText.text = "\(AudioFileName) stored locally until next login"
+                 self.UIUploadStatusText.text = "\(AudioFileNameMP3) stored locally until next login"
                  self.RecorderTakingInput = true
                  return
             }
@@ -292,139 +238,124 @@ class ViewController: UIViewController, AVAudioRecorderDelegate, GIDSignInDelega
             let dispatchQueue = DispatchQueue(label: "Upload", qos: .background)
             dispatchQueue.async {
                 
-                let audioFileName = self.AudioFileName
-                let audioFilePath = self.AudioFilePath
+                let audioFileNative = self.AudioFileNameNative
+                let audioFileMP3 = self.AudioFileNameMP3
+                let audioPathNative = self.AudioFilePathNative
+                let audioPathMP3 = self.AudioFilePathMP3
                 self.RecorderTakingInput = true
                 
-                print(audioFileName)
-                 
+                print(audioFileMP3)
+                // generate MP3 file from native encoding
+                let command = "-y -i \(audioPathNative) \(audioPathMP3)"
+                MobileFFmpeg.execute(command)
+                
+                if self.audioFileExists(named: audioFileMP3) == false {
+                    print("MP3 not generated - deleting ")
+                    //self.deleteFile(named: audioFileMP3)
+                    
+                }
+                
                 guard self.signedIntoGoogle() == true else {return}
 
-                // upload the MP3.  this upload will delete the MP3 audio if successful
-                print("uploading file \(audioFileName)")
+                // upload the MP3.  this upload will delete the native and MP3 audio if successful
+                print("uploading file \(audioFileMP3)")
                 self.uploadFile(
-                    audioFileName: audioFileName,
+                    audioFileMP3: audioFileMP3,
+                    audioFileNative: audioFileNative,
                     folderID: UploadFolderID!,
-                    audioFileURL: URL(string: "file://" + audioFilePath)!,
+                    MP3fileURL: URL(string: "file://" + audioPathMP3)!,
                     mimeType: "audio/mpeg",
                     service: GoogleDriveService)
                 
             }
         }
     }
+   
     
-    
-    func startRecording() {
+    func recordingInit() {
+         RecordingSession = AVAudioSession.sharedInstance()
 
-
-        let numberChannels : UInt32 = ConfigAudioType == "Mono" ? 1 : 2
-
-        // configure to create WAV recording, start it
-        try! AVAudioSession.sharedInstance().setCategory(AVAudioSession.Category.playAndRecord)
-        try! AVAudioSession.sharedInstance().setActive(true)
-
-        let format = AVAudioFormat(commonFormat: AVAudioCommonFormat.pcmFormatInt16,
-                                    sampleRate: SAMPLE_RATE_AV,
-             channels: numberChannels,
-             interleaved: true)
-         
-        AudioEngine.connect(AudioEngine.inputNode, to: Mixer, format: format)
-        AudioEngine.connect(Mixer, to: AudioEngine.mainMixerNode, format: format)
-
-        _ = ExtAudioFileCreateWithURL(URL(fileURLWithPath: TMP_WAV_PATH) as CFURL,
-             kAudioFileWAVEType,
-             (format?.streamDescription)!,
-             nil,
-             AudioFileFlags.eraseFile.rawValue,
-             &Outref)
-
-        Mixer.installTap(onBus: 0, bufferSize: AVAudioFrameCount((format?.sampleRate)!), format: format, block: { (buffer: AVAudioPCMBuffer!, time: AVAudioTime!) -> Void in
-
-            let audioBuffer : AVAudioBuffer = buffer
-            _ = ExtAudioFileWrite(self.Outref!, buffer.frameLength, audioBuffer.audioBufferList)
-        })
-
-        try! AudioEngine.start()
-        
-        
-        // begin MP3 mixin
-        var rate: Int32 = 96
-        switch ConfigAudioBitRate {
-        case "96,000":
-            rate = 96
-        case "128,000":
-            rate = 128
-        case "192,000":
-            rate = 192
-        default:
-            print("ERROR \(ConfigAudioBitRate)")
-            fatalError(ConfigAudioBitRate)
-        }
-        let numberLAMEChannels : Int32 = ConfigAudioType == "Mono" ? 1 : 2
-
-        MP3Active = true
-        var total = 0
-        var read = 0
-        var write: Int32 = 0
-
-        var pcm: UnsafeMutablePointer<FILE> = fopen(TMP_WAV_PATH, "rb")
-        fseek(pcm, 4*1024, SEEK_CUR)
-        let mp3: UnsafeMutablePointer<FILE> = fopen(AudioFilePath, "wb")
-        let PCM_SIZE: Int = 8192
-        let MP3_SIZE: Int32 = 8192
-        let pcmbuffer = UnsafeMutablePointer<Int16>.allocate(capacity: Int(PCM_SIZE*2))
-        let mp3buffer = UnsafeMutablePointer<UInt8>.allocate(capacity: Int(MP3_SIZE))
-
-        let lame = lame_init()
-        lame_set_num_channels(lame, numberLAMEChannels)
-        lame_set_mode(lame, MONO)
-        lame_set_in_samplerate(lame, SAMPLE_RATE_LAME)
-        lame_set_brate(lame, rate)
-        lame_set_VBR(lame, vbr_off)
-        lame_init_params(lame)
-
-        DispatchQueue.global(qos: .default).async {
-            while true {
-                pcm = fopen(self.TMP_WAV_PATH, "rb")
-                     fseek(pcm, 4*1024 + total, SEEK_CUR)
-                     read = fread(pcmbuffer, MemoryLayout<Int16>.size, PCM_SIZE, pcm)
-                     if read != 0 {
-                         write = lame_encode_buffer(lame, pcmbuffer, nil, Int32(read), mp3buffer, MP3_SIZE)
-                         fwrite(mp3buffer, Int(write), 1, mp3)
-                         total += read * MemoryLayout<Int16>.size
-                         fclose(pcm)
-                     } else if !self.MP3Active {
-                         _ = lame_encode_flush(lame, mp3buffer, MP3_SIZE)
-                         _ = fwrite(mp3buffer, Int(write), 1, mp3)
-                         break
+         do {
+             try RecordingSession.setCategory(.playAndRecord, mode: .default)
+             try RecordingSession.setActive(true)
+             RecordingSession.requestRecordPermission() { [unowned self] allowed in
+                 DispatchQueue.main.async {
+                     if allowed {
+                         print("enabled recording UI")
                      } else {
-                         fclose(pcm)
-                         usleep(50)
+                         print("Failed to init recording UI")
+                         
                      }
-            }
-            lame_close(lame)
-            fclose(mp3)
-            fclose(pcm)
-        }
-    }
-         
-         
-    func stopRecording() {
-
-        // stop audio engine and player
-        // then halt the MP3 encoding (by setting MP3Active = false
-        AudioFilePlayer.stop()
-        AudioEngine.stop()
-        Mixer.removeTap(onBus: 0)
-
-        MP3Active = false
-        ExtAudioFileDispose(Outref!)
-
-        try! AVAudioSession.sharedInstance().setActive(false)
-        deleteFile(named: TMP_WAV_NAME)
+                 }
+             }
+         } catch {
+             print("ERROR")
+         }
      }
+     
 
+    func startRecording(path pathNativeRecording: String) {
+         
+         var bitRate: Int = 16000
+         let sampleRate: Int = SAMPLE_RATE
+         
+         
+         switch ConfigAudioBitRate {
+         case "96,000":
+             bitRate = 96000
+         case "128,000":
+             bitRate = 128000
+         case "192,000":
+             bitRate = 192000
+         default:
+             print("ERROR \(ConfigAudioBitRate)")
+             fatalError(ConfigAudioBitRate)
+         }
+             
+        let numberChannels = ConfigAudioType == "Mono" ? 1 : 2
         
+        let settings:[String : Any] = [
+            AVFormatIDKey: kAudioFormatAppleLossless,
+            AVEncoderAudioQualityKey : AVAudioQuality.min.rawValue,
+            AVEncoderBitRateKey : bitRate,
+            AVNumberOfChannelsKey: 1,
+            AVSampleRateKey : sampleRate
+        ]
+          
+         do {
+             print("create AVAudio:  sampleRate=\(sampleRate) bitrate=\(bitRate) numberChannels=\(numberChannels)  ")
+             AudioRecorder = try AVAudioRecorder(url: URL(string: pathNativeRecording)!, settings: settings)
+             AudioRecorder.isMeteringEnabled = true
+             AudioRecorder.delegate = self
+             print("start recording", pathNativeRecording)
+
+             AudioRecorder.record()
+             print("AudioRecorder returns")
+
+         } catch let error as NSError {
+            print("Recording Start Error!")
+            print(error.localizedDescription);
+            AudioRecorder = nil
+            
+            UIRecordingButton.setImage(UIImage(named: "recorderoff"), for: UIControl.State.normal)
+            TimerClock.invalidate()
+            
+            deactivateRecordingUI()
+            UIUploadStatusText.text = ""
+
+         }
+     }
+     
+     
+     func stopRecording() {
+         
+        print("stop recording")
+        AudioRecorder.stop()
+        AudioRecorder = nil
+         
+     }
+    
+    
     func cancelRecording() {
         
         RecordingActive = false
@@ -435,11 +366,14 @@ class ViewController: UIViewController, AVAudioRecorderDelegate, GIDSignInDelega
          
         deactivateRecordingUI()
         
-        deleteFile(named: AudioFileName)
+        deleteFile(named: AudioFileNameNative)
+        deleteFile(named: AudioFileNameMP3)
         
         UICancelRecordingButton.isHidden = true
         UIUploadStatusText.text = "recording cancelled and deleted"
     }
+    
+
     
     
     func activateRecordingUI() {
@@ -525,17 +459,42 @@ class ViewController: UIViewController, AVAudioRecorderDelegate, GIDSignInDelega
         }
         return false
     }
+    
+    
+    func generateRecordingPaths () -> (String, String, String, String) {
+        
+        var fileExists: Bool
+        var audioFileNative, audioFileMP3, audioPathNative, audioPathMP3 : String
+
+        let documentDirectory = getDocumentsDirectory()
+        
+        let fileManager = FileManager.default
+        repeat {
+            let format = DateFormatter()
+            format.dateFormat = "yyMMdd.HHmmss"
+            let formattedDate = format.string(from: Date())
+            
+            audioFileNative = AUDIO_PREFIX + formattedDate +  NATIVE_AUDIO_SUFFIX
+            audioPathNative = documentDirectory.appendingPathComponent(audioFileNative).path
+            audioFileMP3 = AUDIO_PREFIX + formattedDate +  MP3_AUDIO_SUFFIX
+            audioPathMP3 = documentDirectory.appendingPathComponent(audioFileMP3).path
+            fileExists = fileManager.fileExists(atPath: audioPathNative)
+        } while (fileExists == true)
+        
+        return (audioFileNative, audioFileMP3, audioPathNative, audioPathMP3)
+    }
         
     
     func uploadFile(
-        audioFileName: String,
+        audioFileMP3: String,
+        audioFileNative: String,
         folderID: String,
-        audioFileURL: URL,
+        MP3fileURL: URL,
         mimeType: String,
         service: GTLRDriveService) {
         
         let file = GTLRDrive_File()
-        file.name = audioFileName
+        file.name = audioFileMP3
         
         // if folder is root, no need to set parent
         // otherwise set parent to folder ID
@@ -545,7 +504,7 @@ class ViewController: UIViewController, AVAudioRecorderDelegate, GIDSignInDelega
         }
         
         // Optionally, GTLRUploadParameters can also be created with a Data object.
-        let uploadParameters = GTLRUploadParameters(fileURL: audioFileURL, mimeType: mimeType)
+        let uploadParameters = GTLRUploadParameters(fileURL: MP3fileURL, mimeType: mimeType)
         
         let query = GTLRDriveQuery_FilesCreate.query(withObject: file, uploadParameters: uploadParameters)
         
@@ -553,28 +512,28 @@ class ViewController: UIViewController, AVAudioRecorderDelegate, GIDSignInDelega
             let rate = (totalBytesUploaded * 100) / totalBytesExpectedToUpload
             print("progress... \(totalBytesUploaded)  \(totalBytesExpectedToUpload) \(rate)")
             
-            self.UIUploadStatusText.text = "uploading \(audioFileName) \(rate)%"
+            self.UIUploadStatusText.text = "uploading \(audioFileMP3) \(rate)%"
         }
         
         service.executeQuery(query) { (_, result, error) in
             
             guard error == nil else {
                 print("Upload FAILED")
-                self.UIUploadStatusText.text = "\(audioFileName) did not upload.  check your connection"
+                self.UIUploadStatusText.text = "\(audioFileMP3) did not upload.  check your connection"
                 //fatalError(error!.localizedDescription)
                 return
             }
             
             print("Upload Successful")
             if folderID == GOOGLE_DRIVE_ROOT_FOLDER {
-                self.UIUploadStatusText.text = "\(audioFileName) uploaded to home folder in google"
+                self.UIUploadStatusText.text = "\(audioFileMP3) uploaded to home folder in google"
              } else {
-                 self.UIUploadStatusText.text = "\(audioFileName) uploaded to \(ConfigUploadFolder) in google"
+                 self.UIUploadStatusText.text = "\(audioFileMP3) uploaded to \(ConfigUploadFolder) in google"
              }
 
-            // lastly, delete mp3 file, indicating completion
-            self.deleteFile(named: audioFileName)
-
+            // lastly, delete both native and mp3 file, indicating completion
+            self.deleteFile(named: audioFileMP3)
+            self.deleteFile(named: audioFileNative)
             
         }
     }
@@ -591,25 +550,39 @@ class ViewController: UIViewController, AVAudioRecorderDelegate, GIDSignInDelega
         self.RecorderTakingInput = true
 
 
-        // for every mp3 file ...
+        // for every native m4a file ...
+        // convert to mp3
         // upload the mp3
         do {
-            let audioFileList = try FileManager.default.contentsOfDirectory(atPath: DOCUMENTS_PATH)
+            let audioFileList = try FileManager.default.contentsOfDirectory(atPath: PATH_DOCUMENTS)
             
-            for audioFileName in audioFileList {
-                if audioFileName.contains(MP3_AUDIO_SUFFIX) == false {continue}
-                print("Here: \(audioFileName) \(AudioFileNameCurrentlyRecording)")
+            for audioFileNative in audioFileList {
+                if audioFileNative.contains(NATIVE_AUDIO_SUFFIX) == false {continue}
+                print("Here: \(audioFileNative) \(AudioFileNameCurrentlyRecording)")
 
-                if audioFileName == AudioFileNameCurrentlyRecording {
-                    print("Skipping \(audioFileName)")
+                if audioFileNative == AudioFileNameCurrentlyRecording {
+                    print("Skipping \(AudioFileNameCurrentlyRecording)")
                     continue
                 }
-                let audioPath = DOCUMENTS_PATH + audioFileName
-
+                let audioFileMP3 = audioFileNative.replacingOccurrences(of: NATIVE_AUDIO_SUFFIX, with: MP3_AUDIO_SUFFIX)
+                
+                let audioPathNative = PATH_DOCUMENTS + audioFileNative
+                let audioPathMP3 = PATH_DOCUMENTS + audioFileMP3
+                let command = "-y -i \(audioPathNative) \(audioPathMP3)"
+                print(command)
+                self.UIUploadStatusText.text = "uploading \(audioFileMP3)"
+                MobileFFmpeg.execute(command)
+                if self.audioFileExists(named: audioFileMP3) == false {
+                     print("MP3 not generated - deleting ")
+                     self.deleteFile(named: audioFileNative)
+                     continue
+                 }
+                
                 uploadFile(
-                         audioFileName: audioFileName,
+                         audioFileMP3: audioFileMP3,
+                         audioFileNative: audioFileNative,
                          folderID: UploadFolderID!,
-                         audioFileURL: URL(string: "file://" + audioPath)!,
+                         MP3fileURL: URL(string: "file://" + audioPathMP3)!,
                          mimeType: "audio/mpeg",
                          service: GoogleDriveService)
             }
@@ -638,7 +611,7 @@ class ViewController: UIViewController, AVAudioRecorderDelegate, GIDSignInDelega
         print("deleteMP3AudioFiles")
         let fileManager = FileManager.default
         do {
-            let audioFileList = try fileManager.contentsOfDirectory(atPath: DOCUMENTS_PATH)
+            let audioFileList = try fileManager.contentsOfDirectory(atPath: PATH_DOCUMENTS)
             for audioFileMP3 in audioFileList {
                 if audioFileMP3.contains(MP3_AUDIO_SUFFIX) == false {continue}
 
@@ -652,7 +625,7 @@ class ViewController: UIViewController, AVAudioRecorderDelegate, GIDSignInDelega
     
     func audioFileExists(named audioFileName: String) -> Bool {
         
-        let filePath = DOCUMENTS_PATH + audioFileName
+        let filePath = PATH_DOCUMENTS + audioFileName
         let fileManager = FileManager.default
         if fileManager.fileExists(atPath: filePath) {
                return true
@@ -666,7 +639,7 @@ class ViewController: UIViewController, AVAudioRecorderDelegate, GIDSignInDelega
            print("deleteNativeAudioFiles")
            let fileManager = FileManager.default
            do {
-               let audioFileList = try fileManager.contentsOfDirectory(atPath: DOCUMENTS_PATH)
+               let audioFileList = try fileManager.contentsOfDirectory(atPath: PATH_DOCUMENTS)
                for audioFileNative in audioFileList {
                 if audioFileNative.contains(NATIVE_AUDIO_SUFFIX) == false {continue}
 
@@ -684,7 +657,7 @@ class ViewController: UIViewController, AVAudioRecorderDelegate, GIDSignInDelega
    
        print("deleteFile")
        do {
-            let audioFilePath = "file://" + DOCUMENTS_PATH + audioFileName
+            let audioFilePath = "file://" + PATH_DOCUMENTS + audioFileName
             print(audioFilePath)
             try FileManager.default.removeItem(at: URL(string: audioFilePath)!)
           
@@ -700,7 +673,7 @@ class ViewController: UIViewController, AVAudioRecorderDelegate, GIDSignInDelega
         print("countUploadableFiles")
         let fileManager = FileManager.default
         do {
-            let audioFileList = try fileManager.contentsOfDirectory(atPath: DOCUMENTS_PATH)
+            let audioFileList = try fileManager.contentsOfDirectory(atPath: PATH_DOCUMENTS)
             var count = 0
             for audioFile in audioFileList {
                 if audioFile.contains(MP3_AUDIO_SUFFIX) == false {continue}
@@ -720,7 +693,7 @@ class ViewController: UIViewController, AVAudioRecorderDelegate, GIDSignInDelega
          print("deleteAllFiles")
          let fileManager = FileManager.default
          do {
-             let audioFileList = try fileManager.contentsOfDirectory(atPath: DOCUMENTS_PATH)
+             let audioFileList = try fileManager.contentsOfDirectory(atPath: PATH_DOCUMENTS)
              for audioFile in audioFileList {
                 deleteFile(named: audioFile)
              }
@@ -738,7 +711,7 @@ class ViewController: UIViewController, AVAudioRecorderDelegate, GIDSignInDelega
         print("listAllFiles")
         let fileManager = FileManager.default
         do {
-            let audioFileList = try fileManager.contentsOfDirectory(atPath: DOCUMENTS_PATH)
+            let audioFileList = try fileManager.contentsOfDirectory(atPath: PATH_DOCUMENTS)
             for audioFile in audioFileList {
                 print(audioFile)
             }
@@ -749,7 +722,7 @@ class ViewController: UIViewController, AVAudioRecorderDelegate, GIDSignInDelega
     }
     
     
-    func connectToGoogleDrive(uploadFiles: Bool) {
+    func configureUploadFolderID(uploadFiles: Bool) {
         
         guard signedIntoGoogle() == true else {return}
         
@@ -839,6 +812,14 @@ class ViewController: UIViewController, AVAudioRecorderDelegate, GIDSignInDelega
     }
     
     
+    
+    
+    func getDocumentsDirectory() -> URL {
+          let paths = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask)
+          return paths[0]
+    }
+    
+    
     func isInternetAvailable() -> Bool
     {
         var zeroAddress = sockaddr_in()
@@ -861,3 +842,5 @@ class ViewController: UIViewController, AVAudioRecorderDelegate, GIDSignInDelega
     }
     
 }
+
+ */
