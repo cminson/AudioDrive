@@ -154,25 +154,6 @@
                                     <action selector="SignIntoGoogle:" destination="ZWU-bW-pbD" eventType="touchUpInside" id="d4g-QA-xMH"/>
                                 </connections>
                             </button>
-                            <segmentedControl opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="left" contentVerticalAlignment="top" segmentControlStyle="plain" selectedSegmentIndex="0" translatesAutoresizingMaskIntoConstraints="NO" id="uys-HG-QhH">
-                                <rect key="frame" x="94.5" y="243" width="225" height="32"/>
-                                <constraints>
-                                    <constraint firstAttribute="width" relation="greaterThanOrEqual" constant="225" id="QlV-Gy-Hk1"/>
-                                </constraints>
-                                <segments>
-                                    <segment title="Mono"/>
-                                    <segment title="Stereo"/>
-                                </segments>
-                            </segmentedControl>
-                            <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="Type" textAlignment="center" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="X7u-ri-xDg">
-                                <rect key="frame" x="94.5" y="218" width="225" height="21"/>
-                                <constraints>
-                                    <constraint firstAttribute="width" constant="225" id="wx7-GQ-LvZ"/>
-                                </constraints>
-                                <fontDescription key="fontDescription" type="system" pointSize="17"/>
-                                <nil key="textColor"/>
-                                <nil key="highlightedColor"/>
-                            </label>
                             <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="Google Drive Upload Folder" textAlignment="center" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="Xu3-lL-eKS">
                                 <rect key="frame" x="94.5" y="141" width="225" height="21"/>
                                 <constraints>
@@ -182,14 +163,8 @@
                                 <nil key="textColor"/>
                                 <nil key="highlightedColor"/>
                             </label>
-                            <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="Bitrate " textAlignment="center" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="3lJ-dH-gCF">
-                                <rect key="frame" x="179.5" y="301" width="55" height="21"/>
-                                <fontDescription key="fontDescription" type="system" pointSize="17"/>
-                                <nil key="textColor"/>
-                                <nil key="highlightedColor"/>
-                            </label>
                             <segmentedControl opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="left" contentVerticalAlignment="top" segmentControlStyle="plain" selectedSegmentIndex="0" translatesAutoresizingMaskIntoConstraints="NO" id="WP4-9d-FqC">
-                                <rect key="frame" x="94.5" y="329" width="225" height="32"/>
+                                <rect key="frame" x="95" y="270" width="225" height="32"/>
                                 <constraints>
                                     <constraint firstAttribute="width" constant="225" id="GW0-Wt-g9M"/>
                                 </constraints>
@@ -199,32 +174,32 @@
                                     <segment title="192,000"/>
                                 </segments>
                             </segmentedControl>
+                            <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="Bitrate " textAlignment="center" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="3lJ-dH-gCF">
+                                <rect key="frame" x="179.5" y="244" width="55" height="21"/>
+                                <fontDescription key="fontDescription" type="system" pointSize="17"/>
+                                <nil key="textColor"/>
+                                <nil key="highlightedColor"/>
+                            </label>
                         </subviews>
                         <color key="backgroundColor" systemColor="systemBackgroundColor" cocoaTouchSystemColor="whiteColor"/>
                         <constraints>
                             <constraint firstItem="OsX-dj-gPC" firstAttribute="centerX" secondItem="0ag-Rf-LlN" secondAttribute="centerX" id="2PU-D4-9Hr"/>
-                            <constraint firstItem="3lJ-dH-gCF" firstAttribute="top" secondItem="uys-HG-QhH" secondAttribute="bottom" constant="27" id="453-Ly-3A6"/>
+                            <constraint firstItem="WP4-9d-FqC" firstAttribute="top" secondItem="3lJ-dH-gCF" secondAttribute="bottom" constant="5" id="5VR-XM-doa"/>
                             <constraint firstItem="WP4-9d-FqC" firstAttribute="centerX" secondItem="0ag-Rf-LlN" secondAttribute="centerX" id="DAp-6H-Fj3"/>
                             <constraint firstItem="go9-FE-JI3" firstAttribute="centerX" secondItem="0ag-Rf-LlN" secondAttribute="centerX" id="EYh-qS-0NV"/>
                             <constraint firstItem="Xu3-lL-eKS" firstAttribute="centerX" secondItem="0ag-Rf-LlN" secondAttribute="centerX" id="OkL-x0-jMX"/>
-                            <constraint firstItem="uys-HG-QhH" firstAttribute="top" secondItem="X7u-ri-xDg" secondAttribute="bottom" constant="4" id="QIi-nA-en2"/>
-                            <constraint firstItem="X7u-ri-xDg" firstAttribute="top" secondItem="go9-FE-JI3" secondAttribute="bottom" constant="20" id="YzL-Go-9KZ"/>
+                            <constraint firstItem="3lJ-dH-gCF" firstAttribute="firstBaseline" secondItem="go9-FE-JI3" secondAttribute="baseline" constant="74.5" id="cry-fh-vdY"/>
                             <constraint firstItem="Xu3-lL-eKS" firstAttribute="centerX" secondItem="0ag-Rf-LlN" secondAttribute="centerX" id="gIe-zD-xyh"/>
                             <constraint firstItem="eSK-C4-Gif" firstAttribute="bottom" secondItem="OsX-dj-gPC" secondAttribute="bottom" constant="13" id="hMx-ay-210"/>
-                            <constraint firstItem="X7u-ri-xDg" firstAttribute="centerX" secondItem="0ag-Rf-LlN" secondAttribute="centerX" id="iz9-W2-ekI"/>
                             <constraint firstItem="Xu3-lL-eKS" firstAttribute="top" secondItem="eSK-C4-Gif" secondAttribute="top" constant="53" id="lJA-Ue-TxX"/>
                             <constraint firstItem="go9-FE-JI3" firstAttribute="firstBaseline" secondItem="Xu3-lL-eKS" secondAttribute="baseline" constant="28" id="n2z-VE-HxL"/>
-                            <constraint firstItem="WP4-9d-FqC" firstAttribute="top" secondItem="3lJ-dH-gCF" secondAttribute="bottom" constant="7" id="uOF-ya-2yW"/>
-                            <constraint firstItem="uys-HG-QhH" firstAttribute="top" secondItem="X7u-ri-xDg" secondAttribute="bottom" constant="4" id="wG5-Fv-hdV"/>
                             <constraint firstItem="3lJ-dH-gCF" firstAttribute="centerX" secondItem="0ag-Rf-LlN" secondAttribute="centerX" id="wQ7-TJ-hDS"/>
-                            <constraint firstItem="uys-HG-QhH" firstAttribute="centerX" secondItem="0ag-Rf-LlN" secondAttribute="centerX" id="xWc-cs-dNm"/>
                         </constraints>
                         <viewLayoutGuide key="safeArea" id="eSK-C4-Gif"/>
                     </view>
                     <navigationItem key="navigationItem" id="SoA-Oa-FpO"/>
                     <connections>
                         <outlet property="UIAudioBitRate" destination="WP4-9d-FqC" id="9CV-t2-ptX"/>
-                        <outlet property="UIAudioType" destination="uys-HG-QhH" id="3SA-xF-ovO"/>
                         <outlet property="UIGoogleButton" destination="OsX-dj-gPC" id="iek-nk-btg"/>
                         <outlet property="UIUploadFolder" destination="go9-FE-JI3" id="DOi-Od-SUW"/>
                     </connections>

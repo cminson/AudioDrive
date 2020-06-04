@@ -11,7 +11,6 @@ import Foundation
 import SystemConfiguration
 import AVFoundation
 import CoreMedia
-import mobileffmpeg
 import GoogleSignIn
 import GoogleAPIClientForREST
 import GTMSessionFetcher
@@ -65,7 +64,6 @@ class ViewController: UIViewController, AVAudioRecorderDelegate, GIDSignInDelega
     var AudioFileName : String = ""
     var AudioFilePath : String = ""
     var RecorderTakingInput = true
-    var AudioFileNameCurrentlyRecording = ""
     
     var DOCUMENTS_URL : URL!
     var DOCUMENTS_PATH = ""
@@ -85,7 +83,8 @@ class ViewController: UIViewController, AVAudioRecorderDelegate, GIDSignInDelega
     var TMP_WAV_PATH = ""
     let TMP_WAV_NAME = "tmp.wav"
 
-    
+    var ActiveSet = Set<String>()
+
     override func viewDidLoad() {
         
         super.viewDidLoad()
@@ -105,6 +104,8 @@ class ViewController: UIViewController, AVAudioRecorderDelegate, GIDSignInDelega
         GIDSignIn.sharedInstance()?.scopes = [kGTLRAuthScopeDrive]
         GIDSignIn.sharedInstance()?.restorePreviousSignIn()
 
+        UIMeter.isHidden = true
+        /*
         let height = UIMeter.frame.height
         let width = UIMeter.frame.width
         let rectFrame: CGRect = CGRect(x:CGFloat(0), y:CGFloat(0), width:CGFloat(width), height:CGFloat(height))
@@ -112,6 +113,7 @@ class ViewController: UIViewController, AVAudioRecorderDelegate, GIDSignInDelega
         UIMeter.backgroundColor = COLOR_GREENISH
         UIMeterUpdate.backgroundColor = .green
         UIMeter.addSubview(UIMeterUpdate)
+         */
           
         RecordingActive = false
         UICancelRecordingButton.isHidden = true
@@ -177,6 +179,8 @@ class ViewController: UIViewController, AVAudioRecorderDelegate, GIDSignInDelega
           
           AudioDriveGoogleUser = user
           GoogleDriveService.authorizer = user.authentication.fetcherAuthorizer()
+        
+          setGoogleStatusUI()
           connectToGoogleDrive(uploadFiles: false)
 
           print("User signed in")
@@ -254,9 +258,8 @@ class ViewController: UIViewController, AVAudioRecorderDelegate, GIDSignInDelega
             AudioFileName = audioFileName
             AudioFilePath = audioFilePath
             
-            
-            AudioFileNameCurrentlyRecording = AudioFileName
-            startMeterThread()
+            ActiveSet.insert(audioFileName)
+            print("Inserting into Set \(audioFileName)")
             startRecording()
             RecorderTakingInput = true
             UICancelRecordingButton.isHidden = false
@@ -265,8 +268,10 @@ class ViewController: UIViewController, AVAudioRecorderDelegate, GIDSignInDelega
             RecordingActive = false
             UICancelRecordingButton.isHidden = true
 
+            ActiveSet.remove(AudioFileName)
+            print("Removing from Set \(AudioFileName)")
+
             stopRecording()
-            AudioFileNameCurrentlyRecording = ""
 
             UIRecordingButton.setImage(UIImage(named: "recorderoff"), for: UIControl.State.normal)
             TimerClock.invalidate()
@@ -281,7 +286,7 @@ class ViewController: UIViewController, AVAudioRecorderDelegate, GIDSignInDelega
             }
             
             // if upload folder hasn't been set yet, also store locally
-            guard let uploadFolderID = UploadFolderID else {
+            guard let _ = UploadFolderID else {
                  self.UIUploadStatusText.text = "\(AudioFileName) stored locally until next login"
                  self.RecorderTakingInput = true
                  return
@@ -317,7 +322,7 @@ class ViewController: UIViewController, AVAudioRecorderDelegate, GIDSignInDelega
     func startRecording() {
 
 
-        let numberChannels : UInt32 = ConfigAudioType == "Mono" ? 1 : 2
+        let numberChannels : UInt32 =  1
 
         // configure to create WAV recording, start it
         try! AVAudioSession.sharedInstance().setCategory(AVAudioSession.Category.playAndRecord)
@@ -360,8 +365,9 @@ class ViewController: UIViewController, AVAudioRecorderDelegate, GIDSignInDelega
             print("ERROR \(ConfigAudioBitRate)")
             fatalError(ConfigAudioBitRate)
         }
-        let numberLAMEChannels : Int32 = ConfigAudioType == "Mono" ? 1 : 2
-
+        let numberLAMEChannels : Int32 = 1
+        
+        print("rate = \(rate) ")
         MP3Active = true
         var total = 0
         var read = 0
@@ -378,6 +384,7 @@ class ViewController: UIViewController, AVAudioRecorderDelegate, GIDSignInDelega
         let lame = lame_init()
         lame_set_num_channels(lame, numberLAMEChannels)
         lame_set_mode(lame, MONO)
+        
         lame_set_in_samplerate(lame, SAMPLE_RATE_LAME)
         lame_set_brate(lame, rate)
         lame_set_VBR(lame, vbr_off)
@@ -447,7 +454,7 @@ class ViewController: UIViewController, AVAudioRecorderDelegate, GIDSignInDelega
         UIRecordingTimer.text = "00:00:00:00"
 
         UIRecordingTimer.isHidden = false
-        UIMeter.isHidden = false
+        //UIMeter.isHidden = false
  
     }
     
@@ -457,7 +464,7 @@ class ViewController: UIViewController, AVAudioRecorderDelegate, GIDSignInDelega
         UIRecordingTimer.text = "00:00:00:00"
         
         UIRecordingTimer.isHidden = true
-        UIMeter.isHidden = true
+        //UIMeter.isHidden = true
     }
 
     
@@ -536,27 +543,34 @@ class ViewController: UIViewController, AVAudioRecorderDelegate, GIDSignInDelega
         
         let file = GTLRDrive_File()
         file.name = audioFileName
-        
+                
         // if folder is root, no need to set parent
         // otherwise set parent to folder ID
         if folderID != GOOGLE_DRIVE_ROOT_FOLDER {
             //print("Setting FOLDER")
             file.parents = [folderID]
         }
-        
+                
         // Optionally, GTLRUploadParameters can also be created with a Data object.
         let uploadParameters = GTLRUploadParameters(fileURL: audioFileURL, mimeType: mimeType)
         
         let query = GTLRDriveQuery_FilesCreate.query(withObject: file, uploadParameters: uploadParameters)
         
         service.uploadProgressBlock = { _, totalBytesUploaded, totalBytesExpectedToUpload in
-            let rate = (totalBytesUploaded * 100) / totalBytesExpectedToUpload
-            print("progress... \(totalBytesUploaded)  \(totalBytesExpectedToUpload) \(rate)")
             
-            self.UIUploadStatusText.text = "uploading \(audioFileName) \(rate)%"
+            if self.signedIntoGoogle() == true {
+                let rate = (totalBytesUploaded * 100) / totalBytesExpectedToUpload
+                print("progress... \(totalBytesUploaded)  \(totalBytesExpectedToUpload) \(rate)")
+            
+                self.UIUploadStatusText.text = "uploading \(audioFileName) \(rate)%"
+            }
+            else {
+                self.UIUploadStatusText.text = ""
+            }
         }
         
-        service.executeQuery(query) { (_, result, error) in
+        // ticket cancel
+        let ticket = service.executeQuery(query) { (_, result, error) in
             
             guard error == nil else {
                 print("Upload FAILED")
@@ -577,6 +591,8 @@ class ViewController: UIViewController, AVAudioRecorderDelegate, GIDSignInDelega
 
             
         }
+        
+
     }
     
     //
@@ -584,6 +600,8 @@ class ViewController: UIViewController, AVAudioRecorderDelegate, GIDSignInDelega
     //
     func uploadAllFiles() {
     
+        guard signedIntoGoogle() else {return}
+        
         print("uploadAllFiles")
         
         let countAudioFiles = countUploadableFiles()
@@ -598,12 +616,12 @@ class ViewController: UIViewController, AVAudioRecorderDelegate, GIDSignInDelega
             
             for audioFileName in audioFileList {
                 if audioFileName.contains(MP3_AUDIO_SUFFIX) == false {continue}
-                print("Here: \(audioFileName) \(AudioFileNameCurrentlyRecording)")
 
-                if audioFileName == AudioFileNameCurrentlyRecording {
+                if ActiveSet.contains(audioFileName) {
                     print("Skipping \(audioFileName)")
                     continue
                 }
+                ActiveSet.insert(audioFileName)
                 let audioPath = DOCUMENTS_PATH + audioFileName
 
                 uploadFile(

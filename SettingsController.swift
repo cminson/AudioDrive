@@ -79,13 +79,6 @@ class SettingsController: UIViewController, GIDSignInDelegate {
         Settings().loadSettings()
         UIUploadFolder.text = ConfigUploadFolder
         
-        if (ConfigAudioType == "Mono") {
-            UIAudioType.selectedSegmentIndex = 0
-        }
-        else {
-            UIAudioType.selectedSegmentIndex = 1
-        }
-        
 
         if (ConfigAudioBitRate == "96,000") {
             UIAudioBitRate.selectedSegmentIndex = 0
@@ -118,12 +111,10 @@ class SettingsController: UIViewController, GIDSignInDelegate {
         var uploadFolder = DEFAULT_UPLOAD_FOLDER
         if (uploadFolder.count > 0) {uploadFolder = UIUploadFolder.text!}
         
-        let audioType = UIAudioType.titleForSegment(at: UIAudioType.selectedSegmentIndex)!
         let audioBitRate = UIAudioBitRate.titleForSegment(at: UIAudioBitRate.selectedSegmentIndex)!
 
        
         Settings().saveSettings(uploadFolder: uploadFolder,
-                                audioType: audioType,
                                 audioBitRate: audioBitRate
         )
         Settings().loadSettings()
