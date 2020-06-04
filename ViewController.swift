@@ -17,7 +17,11 @@ import GTMSessionFetcher
 import lame
 
 
-
+/*
+ *
+ * This is the main view controller.  All non-settings logic happens here.
+ *
+ */
 
 let NATIVE_AUDIO_SUFFIX = ".m4a"
 let MP3_AUDIO_SUFFIX = ".mp3"
@@ -68,8 +72,6 @@ class ViewController: UIViewController, AVAudioRecorderDelegate, GIDSignInDelega
     var DOCUMENTS_URL : URL!
     var DOCUMENTS_PATH = ""
     
-    
-    // NEW *************************
     var AudioEngine : AVAudioEngine!
     var AudioFile : AVAudioFile!
     var AudioPlayer : AVAudioPlayerNode!
@@ -78,13 +80,13 @@ class ViewController: UIViewController, AVAudioRecorderDelegate, GIDSignInDelega
     var Mixer : AVAudioMixerNode!
     var IsPlay = false
     var MP3Active = false
-    // NEW *************************
-    
+ 
     var TMP_WAV_PATH = ""
     let TMP_WAV_NAME = "tmp.wav"
 
     var ActiveSet = Set<String>()
 
+    // setup google session, recording logic
     override func viewDidLoad() {
         
         super.viewDidLoad()
@@ -94,8 +96,6 @@ class ViewController: UIViewController, AVAudioRecorderDelegate, GIDSignInDelega
         DOCUMENTS_URL = FileManager().urls(for: .documentDirectory, in: .userDomainMask).first!
         DOCUMENTS_PATH = NSSearchPathForDirectoriesInDomains(.documentDirectory, .userDomainMask, true)[0] + "/"
         TMP_WAV_PATH = DOCUMENTS_PATH + TMP_WAV_NAME
-
-        print("DocumentPath: ", DOCUMENTS_PATH)
         
         deactivateRecordingUI()
         
@@ -105,6 +105,8 @@ class ViewController: UIViewController, AVAudioRecorderDelegate, GIDSignInDelega
         GIDSignIn.sharedInstance()?.restorePreviousSignIn()
 
         UIMeter.isHidden = true
+        
+        // Decibel meter commented out for know TBD
         /*
         let height = UIMeter.frame.height
         let width = UIMeter.frame.width
@@ -126,9 +128,10 @@ class ViewController: UIViewController, AVAudioRecorderDelegate, GIDSignInDelega
      }
     
 
+    // this is where we update the UI to reflect google login status
     override func viewWillAppear(_ animated: Bool) {
 
-        print("view will appear")
+        //print("view will appear")
         connectToGoogleDrive(uploadFiles: false)
         setGoogleStatusUI()
         
@@ -148,6 +151,8 @@ class ViewController: UIViewController, AVAudioRecorderDelegate, GIDSignInDelega
     }
     
     
+    // invoked when we move to setting screen.  give settings a handle to Self so that it
+    // can flag this view about any setting changes
     override func prepare(for segue: UIStoryboardSegue, sender: Any?) {
        
        super.prepare(for: segue, sender: sender)
@@ -163,11 +168,11 @@ class ViewController: UIViewController, AVAudioRecorderDelegate, GIDSignInDelega
        }       
     }
     
-    //GIDSignInDelegate
+    // GIDSignInDelegate: involed by google framework on signin
     func sign(_ signIn: GIDSignIn!, didSignInFor user: GIDGoogleUser!,
                 withError error: Error!) {
     
-          print("SIGN IN: ViewControler")
+          //print("SIGN IN: ViewControler")
           if let error = error {
               if (error as NSError).code == GIDSignInErrorCode.hasNoAuthInKeychain.rawValue {
                   print("The user has not signed in before or they have since signed out.")
@@ -183,18 +188,19 @@ class ViewController: UIViewController, AVAudioRecorderDelegate, GIDSignInDelega
           setGoogleStatusUI()
           connectToGoogleDrive(uploadFiles: false)
 
-          print("User signed in")
+          // print("User signed in")
     }
       
-      
-      func sign(_ signIn: GIDSignIn!, didDisconnectWith user: GIDGoogleUser!,
+
+    // invoked by google framework on disconnect from google
+    func sign(_ signIn: GIDSignIn!, didDisconnectWith user: GIDGoogleUser!,
                 withError error: Error!) {
           
-          print("User disconnecting")
+          // print("User disconnecting")
       }
 
     
-    
+    // this gets invoked when user cancels recording (touches the 'X' in lower right)
     @IBAction func checkCancelRecording(_ sender: Any) {
     
         let alert = UIAlertController(title: "Delete this recording - are you sure?",
@@ -214,6 +220,7 @@ class ViewController: UIViewController, AVAudioRecorderDelegate, GIDSignInDelega
     }
     
     
+    // show our google login status on top of view
     func setGoogleStatusUI() {
             
         if signedIntoGoogle() == true {
@@ -226,6 +233,7 @@ class ViewController: UIViewController, AVAudioRecorderDelegate, GIDSignInDelega
     }
 
     
+    // toggle button.  either start a recording or stop the current recording
     @IBAction func recordButtonClicked(_ sender: Any) {
         
         guard RecorderTakingInput == true else {return}
@@ -259,7 +267,7 @@ class ViewController: UIViewController, AVAudioRecorderDelegate, GIDSignInDelega
             AudioFilePath = audioFilePath
             
             ActiveSet.insert(audioFileName)
-            print("Inserting into Set \(audioFileName)")
+            //print("Inserting into Set \(audioFileName)")
             startRecording()
             RecorderTakingInput = true
             UICancelRecordingButton.isHidden = false
@@ -269,7 +277,6 @@ class ViewController: UIViewController, AVAudioRecorderDelegate, GIDSignInDelega
             UICancelRecordingButton.isHidden = true
 
             ActiveSet.remove(AudioFileName)
-            print("Removing from Set \(AudioFileName)")
 
             stopRecording()
 
@@ -301,12 +308,12 @@ class ViewController: UIViewController, AVAudioRecorderDelegate, GIDSignInDelega
                 let audioFilePath = self.AudioFilePath
                 self.RecorderTakingInput = true
                 
-                print(audioFileName)
+                //print(audioFileName)
                  
                 guard self.signedIntoGoogle() == true else {return}
 
                 // upload the MP3.  this upload will delete the MP3 audio if successful
-                print("uploading file \(audioFileName)")
+                //print("uploading file \(audioFileName)")
                 self.uploadFile(
                     audioFileName: audioFileName,
                     folderID: UploadFolderID!,
@@ -319,6 +326,7 @@ class ViewController: UIViewController, AVAudioRecorderDelegate, GIDSignInDelega
     }
     
     
+    // record the MP3.  Painfully use lame to tap into the byte stream and perform the encoding
     func startRecording() {
 
 
@@ -367,7 +375,7 @@ class ViewController: UIViewController, AVAudioRecorderDelegate, GIDSignInDelega
         }
         let numberLAMEChannels : Int32 = 1
         
-        print("rate = \(rate) ")
+        //print("rate = \(rate) ")
         MP3Active = true
         var total = 0
         var read = 0
@@ -415,7 +423,8 @@ class ViewController: UIViewController, AVAudioRecorderDelegate, GIDSignInDelega
         }
     }
          
-         
+    
+    // terminate recording.  disconnect the lame tap, stop everywhere, delete the tmp files
     func stopRecording() {
 
         // stop audio engine and player
@@ -431,7 +440,8 @@ class ViewController: UIViewController, AVAudioRecorderDelegate, GIDSignInDelega
         deleteFile(named: TMP_WAV_NAME)
      }
 
-        
+    
+    // cancel recording.  same as stopRecording, except we delete the MP3
     func cancelRecording() {
         
         RecordingActive = false
@@ -468,6 +478,7 @@ class ViewController: UIViewController, AVAudioRecorderDelegate, GIDSignInDelega
     }
 
     
+    // our old decible code.  TBD
     func startMeterThread() {
         
         OperationQueue().addOperation({[weak self] in
@@ -487,13 +498,13 @@ class ViewController: UIViewController, AVAudioRecorderDelegate, GIDSignInDelega
      
     func audioRecorderDidFinishRecording(_ recorder: AVAudioRecorder, successfully flag: Bool) {
          
-         print("audioRecorderDidFinishRecording")
+         //print("audioRecorderDidFinishRecording")
     }
 
     
     @IBAction func unwindSettingsScreen(unwindSegue: UIStoryboardSegue) {
         
-        print("unwindSettingsScreen")
+        //print("unwindSettingsScreen")
     }
     
     
@@ -533,7 +544,7 @@ class ViewController: UIViewController, AVAudioRecorderDelegate, GIDSignInDelega
         return false
     }
         
-    
+    // upload a specific file to google.  typically this is the file we just recorded
     func uploadFile(
         audioFileName: String,
         folderID: String,
@@ -560,7 +571,7 @@ class ViewController: UIViewController, AVAudioRecorderDelegate, GIDSignInDelega
             
             if self.signedIntoGoogle() == true {
                 let rate = (totalBytesUploaded * 100) / totalBytesExpectedToUpload
-                print("progress... \(totalBytesUploaded)  \(totalBytesExpectedToUpload) \(rate)")
+                //print("progress... \(totalBytesUploaded)  \(totalBytesExpectedToUpload) \(rate)")
             
                 self.UIUploadStatusText.text = "uploading \(audioFileName) \(rate)%"
             }
@@ -569,17 +580,17 @@ class ViewController: UIViewController, AVAudioRecorderDelegate, GIDSignInDelega
             }
         }
         
-        // ticket cancel
-        let ticket = service.executeQuery(query) { (_, result, error) in
+        //
+        let _ = service.executeQuery(query) { (_, result, error) in
             
             guard error == nil else {
-                print("Upload FAILED")
+                //print("Upload FAILED")
                 self.UIUploadStatusText.text = "\(audioFileName) did not upload.  check your connection"
                 //fatalError(error!.localizedDescription)
                 return
             }
             
-            print("Upload Successful")
+            //print("Upload Successful")
             if folderID == GOOGLE_DRIVE_ROOT_FOLDER {
                 self.UIUploadStatusText.text = "\(audioFileName) uploaded to home folder in google"
              } else {
@@ -596,16 +607,18 @@ class ViewController: UIViewController, AVAudioRecorderDelegate, GIDSignInDelega
     }
     
     //
-    // upload all pending files
+    // upload all pending files.
+    // these are the MP3s that were recorded when we weren't logged into google
+    // now that we're logged in (presumably), iterate through these files and send them off to google drive
     //
     func uploadAllFiles() {
     
         guard signedIntoGoogle() else {return}
         
-        print("uploadAllFiles")
+        //print("uploadAllFiles")
         
         let countAudioFiles = countUploadableFiles()
-        print("Will upload \(countAudioFiles) Files")
+        //print("Will upload \(countAudioFiles) Files")
         self.RecorderTakingInput = true
 
 
@@ -618,7 +631,7 @@ class ViewController: UIViewController, AVAudioRecorderDelegate, GIDSignInDelega
                 if audioFileName.contains(MP3_AUDIO_SUFFIX) == false {continue}
 
                 if ActiveSet.contains(audioFileName) {
-                    print("Skipping \(audioFileName)")
+                    //print("Skipping \(audioFileName)")
                     continue
                 }
                 ActiveSet.insert(audioFileName)
@@ -640,7 +653,6 @@ class ViewController: UIViewController, AVAudioRecorderDelegate, GIDSignInDelega
     
     func copyFile(srcPath: String, destPath: String) {
     
-        print("copyFile")
         let fileManager = FileManager.default
         do {
             try fileManager.copyItem(atPath: srcPath, toPath: destPath)
@@ -653,7 +665,6 @@ class ViewController: UIViewController, AVAudioRecorderDelegate, GIDSignInDelega
     
     func deleteMP3AudioFiles() {
     
-        print("deleteMP3AudioFiles")
         let fileManager = FileManager.default
         do {
             let audioFileList = try fileManager.contentsOfDirectory(atPath: DOCUMENTS_PATH)
@@ -681,14 +692,13 @@ class ViewController: UIViewController, AVAudioRecorderDelegate, GIDSignInDelega
     
     func deleteNativeAudioFiles() {
        
-           print("deleteNativeAudioFiles")
            let fileManager = FileManager.default
            do {
                let audioFileList = try fileManager.contentsOfDirectory(atPath: DOCUMENTS_PATH)
                for audioFileNative in audioFileList {
                 if audioFileNative.contains(NATIVE_AUDIO_SUFFIX) == false {continue}
 
-                print(audioFileNative)
+                //print(audioFileNative)
                 deleteFile(named: audioFileNative)
                }
            } catch (let error) {
@@ -700,10 +710,9 @@ class ViewController: UIViewController, AVAudioRecorderDelegate, GIDSignInDelega
     
     func deleteFile(named audioFileName:String) {
    
-       print("deleteFile")
        do {
             let audioFilePath = "file://" + DOCUMENTS_PATH + audioFileName
-            print(audioFilePath)
+            //print(audioFilePath)
             try FileManager.default.removeItem(at: URL(string: audioFilePath)!)
           
        } catch (let error) {
@@ -715,7 +724,6 @@ class ViewController: UIViewController, AVAudioRecorderDelegate, GIDSignInDelega
     
     func countUploadableFiles() -> Int {
         
-        print("countUploadableFiles")
         let fileManager = FileManager.default
         do {
             let audioFileList = try fileManager.contentsOfDirectory(atPath: DOCUMENTS_PATH)
@@ -735,7 +743,6 @@ class ViewController: UIViewController, AVAudioRecorderDelegate, GIDSignInDelega
     
     func deleteAllFiles() {
      
-         print("deleteAllFiles")
          let fileManager = FileManager.default
          do {
              let audioFileList = try fileManager.contentsOfDirectory(atPath: DOCUMENTS_PATH)
@@ -749,11 +756,8 @@ class ViewController: UIViewController, AVAudioRecorderDelegate, GIDSignInDelega
      }
 
 
-    
-    
     func listAllFiles() {
     
-        print("listAllFiles")
         let fileManager = FileManager.default
         do {
             let audioFileList = try fileManager.contentsOfDirectory(atPath: DOCUMENTS_PATH)
@@ -767,11 +771,13 @@ class ViewController: UIViewController, AVAudioRecorderDelegate, GIDSignInDelega
     }
     
     
+    // get a handle to the google upload folder.
+    // then upload all pending files in the background
     func connectToGoogleDrive(uploadFiles: Bool) {
         
         guard signedIntoGoogle() == true else {return}
         
-        print("configureUploadFolderID")
+        //print("configureUploadFolderID")
     
         // if target folder is empty or weird, make target folder ROOT
         let vaildateNameString =  ConfigUploadFolder.replacingOccurrences(of: " ", with: "")
@@ -780,11 +786,11 @@ class ViewController: UIViewController, AVAudioRecorderDelegate, GIDSignInDelega
             return
         }
 
-        print(ConfigUploadFolder)
+        //print(ConfigUploadFolder)
         getFolderID(name: ConfigUploadFolder, service: GoogleDriveService, user: AudioDriveGoogleUser!) { folderID in
             // new folder, create it
             if folderID == nil {
-                print("Creating new folder \(ConfigUploadFolder)")
+                //print("Creating new folder \(ConfigUploadFolder)")
                 self.createFolder(
                     name: ConfigUploadFolder,
                     service: GoogleDriveService) {
@@ -794,7 +800,7 @@ class ViewController: UIViewController, AVAudioRecorderDelegate, GIDSignInDelega
                   }
             } else {
                 // Folder already exists
-                print("folder exists \(ConfigUploadFolder)")
+                //print("folder exists \(ConfigUploadFolder)")
                 UploadFolderID = folderID
                 if uploadFiles == true {self.uploadAllFiles()}
             }
