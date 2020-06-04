@@ -59,8 +59,6 @@ class SettingsController: UIViewController, GIDSignInDelegate {
     
     override func viewDidLoad() {
         
-        print("View Did Load")
-
         super.viewDidLoad()
         self.title = "Settings"
         
@@ -74,8 +72,7 @@ class SettingsController: UIViewController, GIDSignInDelegate {
 
     override func viewWillAppear(_ animated: Bool) {
 
-        print("ViewWillAppear")
-        
+ 
         Settings().loadSettings()
         UIUploadFolder.text = ConfigUploadFolder
         
