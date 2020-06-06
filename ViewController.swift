@@ -31,10 +31,6 @@ let GOOGLE_DRIVE_ROOT_FOLDER = "!ROOT!"     // special string indicating upload 
 let MAX_DECIBLES : Float = 70.0
 
 
-// our sample rate is 44.1, expressed in two numbers for lame and AV
-let SAMPLE_RATE_LAME : Int32 = 44100
-let SAMPLE_RATE_AV = 44100.0
-
 var AudioDriveGoogleUser: GIDGoogleUser?
 
 
@@ -238,6 +234,7 @@ class ViewController: UIViewController, AVAudioRecorderDelegate, GIDSignInDelega
         
         guard RecorderTakingInput == true else {return}
         
+        print("record button clickec")
         RecorderTakingInput = false
         if RecordingActive == false {
             RecordingActive = true
@@ -267,7 +264,7 @@ class ViewController: UIViewController, AVAudioRecorderDelegate, GIDSignInDelega
             AudioFilePath = audioFilePath
             
             ActiveSet.insert(audioFileName)
-            //print("Inserting into Set \(audioFileName)")
+            print("Inserting into Set \(audioFileName)")
             startRecording()
             RecorderTakingInput = true
             UICancelRecordingButton.isHidden = false
@@ -330,17 +327,23 @@ class ViewController: UIViewController, AVAudioRecorderDelegate, GIDSignInDelega
     func startRecording() {
 
 
+        var sampleRateLAME : Int32 = 44100
         let numberChannels : UInt32 =  1
 
         // configure to create WAV recording, start it
         try! AVAudioSession.sharedInstance().setCategory(AVAudioSession.Category.playAndRecord)
         try! AVAudioSession.sharedInstance().setActive(true)
 
+        let sampleRate = AVAudioSession.sharedInstance().sampleRate
+        sampleRateLAME = Int32(sampleRate)
+        
         let format = AVAudioFormat(commonFormat: AVAudioCommonFormat.pcmFormatInt16,
-                                    sampleRate: SAMPLE_RATE_AV,
+                                    sampleRate: sampleRate,
              channels: numberChannels,
              interleaved: true)
-         
+                 
+        print("connect  \(sampleRate) \(sampleRateLAME)")
+
         AudioEngine.connect(AudioEngine.inputNode, to: Mixer, format: format)
         AudioEngine.connect(Mixer, to: AudioEngine.mainMixerNode, format: format)
 
@@ -350,6 +353,7 @@ class ViewController: UIViewController, AVAudioRecorderDelegate, GIDSignInDelega
              nil,
              AudioFileFlags.eraseFile.rawValue,
              &Outref)
+
 
         Mixer.installTap(onBus: 0, bufferSize: AVAudioFrameCount((format?.sampleRate)!), format: format, block: { (buffer: AVAudioPCMBuffer!, time: AVAudioTime!) -> Void in
 
@@ -393,7 +397,7 @@ class ViewController: UIViewController, AVAudioRecorderDelegate, GIDSignInDelega
         lame_set_num_channels(lame, numberLAMEChannels)
         lame_set_mode(lame, MONO)
         
-        lame_set_in_samplerate(lame, SAMPLE_RATE_LAME)
+        lame_set_in_samplerate(lame, sampleRateLAME)
         lame_set_brate(lame, rate)
         lame_set_VBR(lame, vbr_off)
         lame_init_params(lame)
