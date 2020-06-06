@@ -18,10 +18,7 @@ let GoogleDriveService = GTLRDriveService()
 var GoogleUser: GIDGoogleUser?
 var UploadFolderID: String?
 
-let OLD_CLIENT_ID = "71965786129-h9ncmeaodvp89b9c0ssm8v1vdq1ki0cd.apps.googleusercontent.com"
 var CLIENT_ID =     ""
-//CLIENT_ID =       "71965786129-h9ncmeaodvp89b9c0ssm8v1vdq1ki0cd.apps.googleusercontent.com"
-
 
 @UIApplicationMain
 class AppDelegate: UIResponder, UIApplicationDelegate {
@@ -30,12 +27,10 @@ var window: UIWindow?
   
     func application(_ application: UIApplication, didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]?) -> Bool {
                 
-      
         if let filepath = Bundle.main.path(forResource: "GOOGLE_CLIENT_ID", ofType: "txt") {
             do {
                 let key = try String(contentsOfFile: filepath)
                 CLIENT_ID = key.trimmingCharacters(in: .whitespacesAndNewlines)
-                //CLIENT_ID = CLIENT_ID..stringByTrimmingCharactersInSet(NSCharacterSet.whitespaceCharacterSet())
             } catch {
                 print("GOOGLE_CLIENT_ID not read")
                 exit(0)
@@ -45,21 +40,8 @@ var window: UIWindow?
             exit(0)
         }
     
-        /*
-        print(CLIENT_ID)
-        print(OLD_CLIENT_ID)
-        let id_ln = CLIENT_ID.count
-        let old_ln = OLD_CLIENT_ID.count
-        
-        let lastChar = CLIENT_ID.last!
-        if CLIENT_ID != OLD_CLIENT_ID {
-            print("IDs are different \(id_ln) \(old_ln)")
-            print("Last Char: \(lastChar) There")
-        }
-        */
 
         GIDSignIn.sharedInstance()?.clientID = CLIENT_ID
-        //GIDSignIn.sharedInstance()?.clientID = OLD_CLIENT_ID
         //GIDSignIn.sharedInstance().delegate = self
  
         return true
