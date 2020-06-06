@@ -13,7 +13,7 @@ import GoogleAPIClientForREST
 import GTMSessionFetcher
 
 // The Google variables
-let CLIENT_ID = "71965786129-h9ncmeaodvp89b9c0ssm8v1vdq1ki0cd.apps.googleusercontent.com"
+var CLIENT_ID: String = ""  // google ID.  get this from google API console and place in file 'GOOGLE_CLIENT_ID.txt' in the project
 let GoogleDriveService = GTLRDriveService()
 var GoogleUser: GIDGoogleUser?
 var UploadFolderID: String?
@@ -24,7 +24,18 @@ var window: UIWindow?
 
   
     func application(_ application: UIApplication, didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]?) -> Bool {
-
+                
+        if let filepath = Bundle.main.path(forResource: "GOOGLE_CLIENT_ID", ofType: "txt") {
+            do {
+                CLIENT_ID = try String(contentsOfFile: filepath)
+            } catch {
+                print("GOOGLE_CLIENT_ID not read")
+            }
+        } else {
+            print("GOOGLE_CLIENT_ID not found")
+        }
+    
+        print(CLIENT_ID)
         GIDSignIn.sharedInstance()?.clientID = CLIENT_ID
         //GIDSignIn.sharedInstance().delegate = self
  
